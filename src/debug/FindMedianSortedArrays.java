@@ -1,7 +1,7 @@
 package debug;
 
 /**
- * Given two ordered integer arrays nums1 and nums2, with size m and n
+ * Given two ordered integer arrays nums1 and nums2, with size mass and n
  * Find out the median (double) of the two arrays.
  * You may suppose nums1 and nums2 cannot be null at the same time.
  *

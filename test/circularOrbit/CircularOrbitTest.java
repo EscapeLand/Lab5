@@ -17,7 +17,7 @@ public class CircularOrbitTest {
 	@Test @SuppressWarnings("unchecked")
 	public void testAddAndRemove() throws ClassNotFoundException {
 		var eargs = new String[]{"1"};
-		CircularOrbit c = cf.Create("AtomicStructure");
+		CircularOrbit c = cf.create("AtomicStructure");
 		var ecls = Class.forName("applications.Electron");
 		var e = PhysicalObjectFactory.produce(ecls, eargs);
 		assert c != null;
@@ -33,7 +33,7 @@ public class CircularOrbitTest {
 	
 	@Test @SuppressWarnings("unchecked")
 	public void testGetTrackAndObjectOnTrack(){
-		var b = cf.CreateAndLoad("input/AtomicStructure.txt");
+		var b = cf.createAndLoad("input/AtomicStructure.txt");
 		assert b != null;
 		Set<Double[]> bt = b.getTracks();
 		assertEquals(5, bt.size());
@@ -42,7 +42,7 @@ public class CircularOrbitTest {
 			assertEquals(test[i], b.getObjectsOnTrack(new double[]{i + 1}).size());
 		}
 		
-		var a = cf.CreateAndLoad("input/AtomicStructure_Medium.txt");
+		var a = cf.createAndLoad("input/AtomicStructure_Medium.txt");
 		assert a != null;
 		bt = a.getTracks();
 		assertEquals(6, bt.size());
@@ -55,7 +55,7 @@ public class CircularOrbitTest {
 	
 	@Test
 	public void testQuery(){
-		var c = cf.CreateAndLoad("input/StellarSystem.txt");
+		var c = cf.createAndLoad("input/StellarSystem.txt");
 		assert c != null;
 		assertNotNull(c.query("Earth"));
 		assertNotNull(c.query("Sun"));
@@ -65,7 +65,7 @@ public class CircularOrbitTest {
 	
 	@Test
 	public void testRemoveTrack(){
-		var c = cf.CreateAndLoad("input/AtomicStructure.txt");
+		var c = cf.createAndLoad("input/AtomicStructure.txt");
 		assert c != null;
 		assertEquals(37, c.size());
 		assertTrue(c.removeTrack(new double[]{1}));
@@ -77,7 +77,7 @@ public class CircularOrbitTest {
 	
 	@Test
 	public void testAddTrack(){
-		var c = cf.Create("AtomicStructure");
+		var c = cf.create("AtomicStructure");
 		assert c != null;
 		assertEquals(0, c.getTracks().size());
 		assertTrue(c.addTrack(new double[]{1}));
@@ -87,13 +87,13 @@ public class CircularOrbitTest {
 		try{
 			c.addTrack(new double[]{-3});
 		}catch (IllegalArgumentException ex){
-			assertEquals("warning: r cannot be negative while not equal to -1. ", ex.getMessage());
+			assertEquals("warning: radius cannot be negative while not equal to -1. ", ex.getMessage());
 		}
 	}
 	
 	@Test @SuppressWarnings("unchecked")
 	public void testMoveObject(){
-		var c = cf.CreateAndLoad("input/AtomicStructure.txt");
+		var c = cf.createAndLoad("input/AtomicStructure.txt");
 		assert c != null;
 		var s_1 = c.getObjectsOnTrack(new double[]{1});
 		assertEquals(2, s_1.size());
@@ -109,7 +109,7 @@ public class CircularOrbitTest {
 	
 	@Test
 	public void testSetRelationship(){
-		var c = cf.CreateAndLoad("input/SocialNetworkCircle.txt");
+		var c = cf.createAndLoad("input/SocialNetworkCircle.txt");
 		assert c != null;
 		var a = c.query("TommyWong");
 		var b = c.query("LisaWong");
@@ -121,13 +121,13 @@ public class CircularOrbitTest {
 	
 	@Test
 	public void testToString(){
-		var a = cf.Create("AtomicStructure");
+		var a = cf.create("AtomicStructure");
 		assert a != null;
 		assertEquals("AtomStructure", a.toString());
-		var s = cf.Create("StellarSystem");
+		var s = cf.create("StellarSystem");
 		assert s != null;
 		assertEquals("StellarSystem", s.toString());
-		var sn = cf.Create("SocialNetworkCircle");
+		var sn = cf.create("SocialNetworkCircle");
 		assert sn != null;
 		assertEquals("SocialNetworkCircle", sn.toString());
 	}
@@ -136,7 +136,7 @@ public class CircularOrbitTest {
 	public void testFindTrackAndClearEmptyTrack()
 			throws NoSuchMethodException, InvocationTargetException, IllegalAccessException
 	{
-		var a = cf.Create("AtomicStructure");
+		var a = cf.create("AtomicStructure");
 		assert a != null;
 		var sucls = a.getClass().getSuperclass();
 		var _1 = new double[]{1};
