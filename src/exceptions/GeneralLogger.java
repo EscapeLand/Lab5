@@ -18,8 +18,8 @@ import java.util.logging.Logger;
 
 public class GeneralLogger {
 
-  private static Logger warning;
-  private static Logger info;
+  private static final Logger warning;
+  private static final Logger info;
 
   static {
     warning = Logger.getLogger("CircularOrbit.GeneralExceptionLogger");
@@ -136,41 +136,42 @@ public class GeneralLogger {
     warning.getHandlers()[0].close();
     info.getHandlers()[0].close();
   }
+
+  static class InfoParser {
+
+    private final List<List> logs = new ArrayList<>();
+
+    @SuppressWarnings("unchecked")
+    void addLogs(String[] log) {
+      List list = new ArrayList();
+      list.add(LocalDateTime.parse(log[0]));
+      list.add(Level.parse(log[1]));
+      list.addAll(Arrays.asList(log).subList(2, log.length));
+      logs.add(list);
+    }
+
+    List<List> getLogs() {
+      return logs;
+    }
+  }
+
+  static class WarningParser {
+
+    private final List<List> logs = new ArrayList<>();
+
+    @SuppressWarnings("unchecked")
+    void addLogs(String[] log) {
+      List list = new ArrayList();
+      list.add(LocalDateTime.parse(log[0]));
+      list.add(Level.parse(log[1]));
+      list.add(log[2].substring(0, log[2].length() - 1));
+      list.add(String.join(" ", Arrays.asList(log).subList(3, log.length)));
+      logs.add(list);
+    }
+
+    List<List> getLogs() {
+      return logs;
+    }
+  }
 }
 
-class InfoParser {
-
-  private List<List> logs = new ArrayList<>();
-
-  @SuppressWarnings("unchecked")
-  void addLogs(String[] log) {
-    List list = new ArrayList();
-    list.add(LocalDateTime.parse(log[0]));
-    list.add(Level.parse(log[1]));
-    list.addAll(Arrays.asList(log).subList(2, log.length));
-    logs.add(list);
-  }
-
-  List<List> getLogs() {
-    return logs;
-  }
-}
-
-class WarningParser {
-
-  private List<List> logs = new ArrayList<>();
-
-  @SuppressWarnings("unchecked")
-  void addLogs(String[] log) {
-    List list = new ArrayList();
-    list.add(LocalDateTime.parse(log[0]));
-    list.add(Level.parse(log[1]));
-    list.add(log[2].substring(0, log[2].length() - 1));
-    list.add(String.join(" ", Arrays.asList(log).subList(3, log.length)));
-    logs.add(list);
-  }
-
-  List<List> getLogs() {
-    return logs;
-  }
-}

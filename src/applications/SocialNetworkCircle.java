@@ -245,7 +245,7 @@ public final class SocialNetworkCircle extends ConcreteCircularOrbit<CentralUser
     //============================================================
 
     JPanel pnlLgc = generatePanel("Logic Distance");
-    JLabel lblrst = new JLabel();
+    JLabel lblResult = new JLabel();
     JButton btnLgc = new JButton("Calculate");
     JTextField txtC = new JTextField("DavidChen");
     JTextField txtD = new JTextField("TomWong");
@@ -254,16 +254,16 @@ public final class SocialNetworkCircle extends ConcreteCircularOrbit<CentralUser
       var a = query(txtC.getText().trim());
       var b = query(txtD.getText().trim());
       if (a instanceof User && b instanceof User) {
-        lblrst.setText(String.valueOf(getLogicalDistance(this, a, b)));
+        lblResult.setText(String.valueOf(getLogicalDistance(this, a, b)));
       } else {
-        lblrst.setText("");
+        lblResult.setText("");
       }
     });
 
     pnlLgc.add(txtC);
     pnlLgc.add(txtD);
     pnlLgc.add(btnLgc);
-    pnlLgc.add(lblrst);
+    pnlLgc.add(lblResult);
     spec.add(pnlLgc);
 
     return spec;
@@ -405,11 +405,12 @@ public final class SocialNetworkCircle extends ConcreteCircularOrbit<CentralUser
   }
 }
 
+@SuppressWarnings("CheckStyle")
 enum Gender {
   M, F
 }
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "CheckStyle"})
 final class User extends PhysicalObject {
 
   private final Gender gender;
@@ -473,7 +474,7 @@ final class User extends PhysicalObject {
   }
 }
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "CheckStyle"})
 final class CentralUser extends PhysicalObject {
 
   private final Gender gender;

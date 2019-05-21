@@ -223,15 +223,15 @@ public final class AtomStructure extends ConcreteCircularOrbit<Kernel, Electron>
     JComboBox<Track> cmbS1 = new JComboBox<>(tmp.toArray(new Track[0]));
     JComboBox<Track> cmbS2 = new JComboBox<>(tmp.toArray(new Track[0]));
     cmbS2.setSelectedIndex(1);
-    JButton btnTrsit = new JButton("Transit");
+    JButton btnTransit = new JButton("Transit");
     JTextField txtNum = new JTextField("  1");
 
     panel.add(cmbS1);
-    panel.add(btnTrsit);
+    panel.add(btnTransit);
     panel.add(cmbS2);
     panel.add(txtNum);
 
-    btnTrsit.addActionListener(e -> {
+    btnTransit.addActionListener(e -> {
       Track from = (Track) cmbS1.getSelectedItem();
       Track to = (Track) cmbS2.getSelectedItem();
       assert from != null && to != null;
@@ -280,33 +280,34 @@ public final class AtomStructure extends ConcreteCircularOrbit<Kernel, Electron>
   private Memento<Electron> saveMemento(double[] from, double[] to) {
     return new Memento<>(getObjectsOnTrack(from), getObjectsOnTrack(to));
   }
+
+  static final class Memento<E extends PhysicalObject> {
+
+    private final Set<E> from;
+    private final Set<E> to;
+
+    Set<E> getFrom() {
+      return from;
+    }
+
+    public Set<E> getTo() {
+      return to;
+    }
+
+    Memento(Set<E> from, Set<E> to) {
+      this.from = from;
+      this.to = to;
+    }
+  }
 }
 
-final class Memento<E extends PhysicalObject> {
-
-  private Set<E> from;
-  private Set<E> to;
-
-  Set<E> getFrom() {
-    return from;
-  }
-
-  public Set<E> getTo() {
-    return to;
-  }
-
-  Memento(Set<E> from, Set<E> to) {
-    this.from = from;
-    this.to = to;
-  }
-}
-
+@SuppressWarnings("CheckStyle")
 final class Caretaker {
 
   final class Pair {
 
-    double[] first;
-    double[] second;
+    final double[] first;
+    final double[] second;
 
     Pair(double[] first, double[] second) {
       this.first = first;
@@ -334,14 +335,14 @@ final class Caretaker {
     }
   }
 
-  private final Map<Pair, Memento<Electron>> mementos = new HashMap<>();
+  private final Map<Pair, AtomStructure.Memento<Electron>> mementos = new HashMap<>();
 
   @Nullable
-  Memento<Electron> getMementos(double[] from, double[] to) {
+  AtomStructure.Memento<Electron> getMementos(double[] from, double[] to) {
     return mementos.get(new Pair(from, to));
   }
 
-  void setMementos(double[] from, double[] to, Memento<Electron> mementos) {
+  void setMementos(double[] from, double[] to, AtomStructure.Memento<Electron> mementos) {
     this.mementos.put(new Pair(from, to), mementos);
   }
 
@@ -350,6 +351,7 @@ final class Caretaker {
   }
 }
 
+@SuppressWarnings("CheckStyle")
 final class Electron extends PhysicalObject {
 
   private ElectronState state = new Ground();
@@ -389,7 +391,7 @@ final class Electron extends PhysicalObject {
   }
 }
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "CheckStyle"})
 final class Kernel extends PhysicalObject {
 
   private int proton;

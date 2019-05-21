@@ -59,17 +59,22 @@ import track.Track;
 public class CircularOrbitHelper<L extends PhysicalObject, E extends PhysicalObject> extends
     JFrame {
 
-  private mxGraph graph;
-  private Object parent;
+  private final mxGraph graph;
+  private final Object parent;
   private double scale;
-  private double length;
-  private Map<Double[], Double[]> radiusMap = new TreeMap<>(
+  private final double length;
+  private final Map<Double[], Double[]> radiusMap = new TreeMap<>(
       Comparator.comparingDouble((Double[] a) -> a[0]).thenComparingDouble(a -> a[1]));
-  private Map<PhysicalObject, Object> cells = new TreeMap<>(PhysicalObject.getDefaultComparator());
-  private Set<Object> circles = new HashSet<>();
+  private final Map<PhysicalObject, Object> cells;
+  private final Set<Object> circles = new HashSet<>();
   public static CircularOrbitHelper frame;
 
-  private CircularOrbitHelper(@NotNull CircularOrbit<L, E> c, int length) {
+  {
+    cells = new TreeMap<>(PhysicalObject.getDefaultComparator());
+  }
+
+  private CircularOrbitHelper(@NotNull CircularOrbit<L, E> c,
+      @SuppressWarnings("SameParameterValue") int length) {
     super(c.toString());
     graph = new mxGraph();
     parent = graph.getDefaultParent();
@@ -81,7 +86,7 @@ public class CircularOrbitHelper<L extends PhysicalObject, E extends PhysicalObj
   }
 
   @SuppressWarnings("unchecked")
-  static <L extends PhysicalObject, E extends PhysicalObject> void visualize(
+  private static <L extends PhysicalObject, E extends PhysicalObject> void visualize(
       CircularOrbit<L, E> c) {
     if (frame != null) {
       frame.setVisible(true);
@@ -333,6 +338,7 @@ public class CircularOrbitHelper<L extends PhysicalObject, E extends PhysicalObj
     return graph.insertVertex(parent, p.toString(), p.getName(), x - w / 2, y - w / 2, w, w, style);
   }
 
+  @SuppressWarnings("UnusedReturnValue")
   private Object line(Object a, Object b, String label) {
     String style =
         "edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;dashed=1;endArrow=none;endFill=0;"

@@ -20,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import track.Track;
 
+@SuppressWarnings("CheckStyle")
 public class CircularOrbitAPIs {
 
   /**
@@ -80,7 +81,7 @@ public class CircularOrbitAPIs {
     if (next.contains(b)) {
       return que.size();
     } else {
-      Set<Integer> forcmp = new HashSet<>();
+      Set<Integer> forCmp = new HashSet<>();
 
       for (PhysicalObject i : next) {
         if (que.contains(i)) {
@@ -88,13 +89,13 @@ public class CircularOrbitAPIs {
         }
         int r = findNext(graph, i, b, new HashSet<>(que));
         if (r > 0) {
-          forcmp.add(r);
+          forCmp.add(r);
         }
       }
-      if (forcmp.isEmpty()) {
+      if (forCmp.isEmpty()) {
         return -1;
       } else {
-        return Collections.min(forcmp);
+        return Collections.min(forCmp);
       }
     }
   }
@@ -108,6 +109,7 @@ public class CircularOrbitAPIs {
    * @param <E> CircularOrbit, E
    * @return the physical distance of the two object.
    */
+  @SuppressWarnings("unused")
   public static <L extends PhysicalObject, E extends PhysicalObject> double getPhysicalDistance(
       CircularOrbit<L, E> c, PhysicalObject e1, PhysicalObject e2) {
     double l1 = e1.getR().getRect()[0];
@@ -234,6 +236,7 @@ public class CircularOrbitAPIs {
   }
 }
 
+@SuppressWarnings("CheckStyle")
 class Difference<E extends PhysicalObject> {
 
   private final int trackDif;
@@ -290,6 +293,7 @@ class Difference<E extends PhysicalObject> {
     return new ArrayList<>(objDif2);
   }
 
+  @SuppressWarnings("WeakerAccess")
   public int getTrackDif() {
     return trackDif;
   }

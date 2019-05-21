@@ -5,6 +5,7 @@ interface ElectronState {
   boolean isGround();
 }
 
+@SuppressWarnings("CheckStyle")
 class Ground implements ElectronState {
 
   @Override
@@ -18,6 +19,7 @@ class Ground implements ElectronState {
   }
 }
 
+@SuppressWarnings("CheckStyle")
 class Excited implements ElectronState {
 
   @Override

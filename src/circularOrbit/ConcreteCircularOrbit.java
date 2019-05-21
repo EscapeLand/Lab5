@@ -50,16 +50,16 @@ public abstract class ConcreteCircularOrbit<L extends PhysicalObject, E extends 
         AF(centre) = the center of the circular orbit.
         AF(objects) = the sum of the objects on the orbit.
      */
-  private Graph<PhysicalObject> relationship = Graph.empty();
+  private final Graph<PhysicalObject> relationship = Graph.empty();
   private L centre = null;
 
-  protected Set<E> objects = new TreeSet<>(getDefaultComparator());
-  protected Set<Track> tracks = new HashSet<>();
+  protected final Set<E> objects = new TreeSet<>(getDefaultComparator());
+  protected final Set<Track> tracks = new HashSet<>();
 
   private Class<E> eClass;
-  @SuppressWarnings({"unused"})
+  @SuppressWarnings({"unused", "FieldCanBeLocal"})
   private Class<L> lClass;
-  protected static Method refresh;
+  private static final Method refresh;
   protected Consumer<CircularOrbit> end;
 
   static {
@@ -70,6 +70,7 @@ public abstract class ConcreteCircularOrbit<L extends PhysicalObject, E extends 
     } catch (NoSuchMethodException | ClassNotFoundException e) {
       GeneralLogger.severe(e);
       System.exit(1);
+      refresh = null;
     }
   }
 
@@ -124,6 +125,7 @@ public abstract class ConcreteCircularOrbit<L extends PhysicalObject, E extends 
    * @param r the radius of the orbit.
    * @return true if the track exist.
    */
+  @SuppressWarnings("BooleanMethodIsAlwaysInverted")
   protected boolean findTrack(double[] r) {
     var tmp = new Track(r);
     return tracks.contains(tmp);
@@ -260,8 +262,8 @@ public abstract class ConcreteCircularOrbit<L extends PhysicalObject, E extends 
     JComboBox<String> objOps = new JComboBox<>(ops);
     Set<Track> tmp = new TreeSet<>(Track.defaultComparator);
     transform(getTracks(), tmp, Track::new);
-    JComboBox<Track> objTidx = new JComboBox<>(tmp.toArray(new Track[0]));
-    objTidx.setEditable(true);
+    JComboBox<Track> cmbTrackIndex = new JComboBox<>(tmp.toArray(new Track[0]));
+    cmbTrackIndex.setEditable(true);
     JButton objExec = new JButton("Execute");
 
     objExec.addActionListener(e -> {
@@ -277,9 +279,9 @@ public abstract class ConcreteCircularOrbit<L extends PhysicalObject, E extends 
           break;
         }
         case 1:
-          var p = objTidx.getSelectedItem();
+          var p = cmbTrackIndex.getSelectedItem();
           if (!(p instanceof Track)) {
-            objTidx.setSelectedIndex(0);
+            cmbTrackIndex.setSelectedIndex(0);
             return;
           }
           Track r = (Track) p;
@@ -302,23 +304,23 @@ public abstract class ConcreteCircularOrbit<L extends PhysicalObject, E extends 
     });
 
     objOP.add(objOps);
-    objOP.add(objTidx);
+    objOP.add(cmbTrackIndex);
     objOP.add(objExec);
     common.add(objOP);
 
-    JButton btnent = new JButton("Entropy");
+    JButton btnEntropy = new JButton("Entropy");
     JButton btnLog = new JButton("Log Panel");
-    JLabel lblrst = new JLabel("");
-    btnent.addActionListener(e -> lblrst.setText(
+    JLabel lblResult = new JLabel("");
+    btnEntropy.addActionListener(e -> lblResult.setText(
         String.valueOf(getObjectDistributionEntropy(this))));
     btnLog.addActionListener(e -> {
-      var logp = CircularOrbitHelper.logPanel(frame);
+      var logPanel = CircularOrbitHelper.logPanel(frame);
       CircularOrbitHelper.frame.setVisible(false);
-      logp.setVisible(true);
+      logPanel.setVisible(true);
       CircularOrbitHelper.frame.setVisible(true);
     });
-    misc.add(btnent);
-    misc.add(lblrst);
+    misc.add(btnEntropy);
+    misc.add(lblResult);
     misc.add(btnLog);
     common.add(misc);
 

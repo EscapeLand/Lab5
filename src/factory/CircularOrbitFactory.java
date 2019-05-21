@@ -4,6 +4,7 @@ import circularOrbit.CircularOrbit;
 import exceptions.ExceptionGroup;
 import org.jetbrains.annotations.Nullable;
 
+@SuppressWarnings("UnnecessaryInterfaceModifier")
 public interface CircularOrbitFactory {
 
   @Nullable

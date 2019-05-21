@@ -30,7 +30,7 @@ public abstract class PhysicalObject {
    * @param r the radius of its track.
    * @param pos the pos of which the object take on the orbit.
    */
-  public PhysicalObject(String name, double[] r, double pos) {
+  protected PhysicalObject(String name, double[] r, double pos) {
     this.name = name;
     this.R_init = this.R = new Track(r);
     this.pos_init = this.pos = pos;
@@ -42,7 +42,7 @@ public abstract class PhysicalObject {
    * @param name name of the object
    * @param r the radius of its track.
    */
-  public PhysicalObject(String name, double[] r) {
+  protected PhysicalObject(String name, double[] r) {
     this(name, r, num < 9 ? 40 * num + 40 * Math.random()
         : 360 * Math.random());
     num++;

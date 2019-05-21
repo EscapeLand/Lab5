@@ -88,6 +88,7 @@ public interface CircularOrbit<L extends PhysicalObject, E extends PhysicalObjec
    * @return true if the load is complete with no error; else false.
    * @throws ExceptionGroup when cannot open the file inferred by path.
    */
+  @SuppressWarnings("SameReturnValue")
   public boolean loadFromFile(String path) throws ExceptionGroup;
 
   /**

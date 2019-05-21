@@ -41,7 +41,7 @@ public final class StellarSystem extends ConcreteCircularOrbit<FixedStar, Planet
   private double time = 0;
   private double timeSpan = 1e16;
   private Runnable update;
-  private static Method run;
+  private static final Method run;
 
   static {
     try {
@@ -317,7 +317,7 @@ public final class StellarSystem extends ConcreteCircularOrbit<FixedStar, Planet
   }
 }
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "CheckStyle"})
 final class FixedStar extends PhysicalObject {
 
   public final double radius;
@@ -362,7 +362,7 @@ final class FixedStar extends PhysicalObject {
   }
 }
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "CheckStyle"})
 class Planet extends PhysicalObject {
 
   private final String color;
@@ -457,7 +457,7 @@ class Planet extends PhysicalObject {
   }
 }
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "CheckStyle"})
 final class PlanetarySystem extends Planet {
 
   private Set<Planet> satellites = new TreeSet<>(PhysicalObject.getDefaultComparator());
