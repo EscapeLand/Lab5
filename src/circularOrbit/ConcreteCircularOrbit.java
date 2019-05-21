@@ -59,7 +59,7 @@ public abstract class ConcreteCircularOrbit<L extends PhysicalObject, E extends 
   private Class<E> eClass;
   @SuppressWarnings({"unused", "FieldCanBeLocal"})
   private Class<L> lClass;
-  private static final Method refresh;
+  private static Method refresh;
   protected Consumer<CircularOrbit> end;
 
   static {
@@ -70,7 +70,6 @@ public abstract class ConcreteCircularOrbit<L extends PhysicalObject, E extends 
     } catch (NoSuchMethodException | ClassNotFoundException e) {
       GeneralLogger.severe(e);
       System.exit(1);
-      refresh = null;
     }
   }
 

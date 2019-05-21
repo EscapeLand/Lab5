@@ -41,7 +41,7 @@ public final class StellarSystem extends ConcreteCircularOrbit<FixedStar, Planet
   private double time = 0;
   private double timeSpan = 1e16;
   private Runnable update;
-  private static final Method run;
+  private static Method run;
 
   static {
     try {
