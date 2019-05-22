@@ -12,7 +12,7 @@ import java.util.Set;
 import static org.junit.Assert.*;
 
 public class CircularOrbitTest {
-	private CircularOrbitFactory cf = new DefaultCircularOrbitFactory();
+	private CircularOrbitFactory cf = CircularOrbitFactory.getDefault();
 	
 	@Test @SuppressWarnings("unchecked")
 	public void testAddAndRemove() throws ClassNotFoundException {

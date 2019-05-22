@@ -1,6 +1,7 @@
 package applications;
 
 import static APIs.CircularOrbitHelper.generatePanel;
+import static java.lang.Math.abs;
 
 import APIs.CircularOrbitAPIs;
 import APIs.CircularOrbitHelper;
@@ -10,16 +11,16 @@ import circularOrbit.PhysicalObject;
 import exceptions.ExceptionGroup;
 import exceptions.GeneralLogger;
 import exceptions.LogicErrorException;
+import factory.CircularOrbitFactory;
 import factory.PhysicalObjectFactory;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
@@ -80,58 +81,60 @@ public final class StellarSystem extends ConcreteCircularOrbit<FixedStar, Planet
 
   @Override
   public boolean loadFromFile(String path) throws ExceptionGroup {
-    File file = new File(path);
     ExceptionGroup exs = new ExceptionGroup();
-    try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-      for (String buffer = reader.readLine(); buffer != null; buffer = reader.readLine()) {
-        try {
-          if (buffer.isEmpty()) {
-            continue;
-          }
-          Matcher m = Pattern.compile("([a-zA-Z]+)\\s?::=\\s?<(.*)>").matcher(buffer);
-          if (!m.find() || m.groupCount() != 2) {
-            throw new IllegalArgumentException(
-                "regex: (" + buffer + "), didn't match, continued. ");
-          }
-          switch (m.group(1)) {
-            case "Stellar": {
-              String[] list = m.group(2).split(",");
-              if (list.length != 3) {
-                throw new IllegalArgumentException("regex: Stellar: not 3 args. continued. ");
-              }
 
-              FixedStar f = new FixedStar(list[0], Double.valueOf(list[1]),
-                  Double.valueOf(list[2]));
-              changeCentre(f);
-              break;
-            }
-            case "Planet": {
-              String[] list = m.group(2).split(",");
-
-              if (list.length != 8) {
-                exs.join(new IllegalArgumentException("regex: Planet: not 8 args. continued. "));
-              }
-              if (query(list[0]) != null) {
-                throw new LogicErrorException(list[0] + " already exist. continued. ");
-              }
-              PhysicalObject p = PhysicalObjectFactory.produce(Planet.class, list);
-              assert p instanceof Planet;
-              if (!addObject(new PlanetarySystem((Planet) p))) {
-                throw new LogicErrorException(list[0] + " already exist. continued. ");
-              }
-              break;
-            }
-            default:
-              throw new IllegalArgumentException(
-                  "regex: unexpected label: " + m.group(1) + " continued. ");
-          }
-        } catch (IllegalArgumentException | LogicErrorException e) {
-          exs.join(e);
-        }
-      }
-    } catch (IOException e) {
-      exs.join(e);
+    var cf = CircularOrbitFactory.getDefault();
+    var txt = cf.read(path);
+    if (txt == null) {
+      exs.join(new IllegalArgumentException("reading " + path + " failed. returned. "));
       throw exs;
+    }
+
+    for (String buffer : txt) {
+      try {
+        if (buffer.isEmpty()) {
+          continue;
+        }
+        Matcher m = Pattern.compile("([a-zA-Z]+)\\s?::=\\s?<(.*)>").matcher(buffer);
+        if (!m.find() || m.groupCount() != 2) {
+          throw new IllegalArgumentException(
+              "regex: (" + buffer + "), didn't match, continued. ");
+        }
+        switch (m.group(1)) {
+          case "Stellar": {
+            String[] list = m.group(2).split(",");
+            if (list.length != 3) {
+              throw new IllegalArgumentException("regex: Stellar: not 3 args. continued. ");
+            }
+
+            FixedStar f = new FixedStar(list[0], Double.valueOf(list[1]),
+                Double.valueOf(list[2]));
+            changeCentre(f);
+            break;
+          }
+          case "Planet": {
+            String[] list = m.group(2).split(",");
+
+            if (list.length != 8) {
+              exs.join(new IllegalArgumentException("regex: Planet: not 8 args. continued. "));
+            }
+            if (query(list[0]) != null) {
+              throw new LogicErrorException(list[0] + " already exist. continued. ");
+            }
+            PhysicalObject p = PhysicalObjectFactory.produce(Planet.class, list);
+            assert p instanceof Planet;
+            if (!addObject((Planet) p)) {
+              throw new LogicErrorException(list[0] + " already exist. continued. ");
+            }
+            break;
+          }
+          default:
+            throw new IllegalArgumentException(
+                "regex: unexpected label: " + m.group(1) + " continued. ");
+        }
+      } catch (IllegalArgumentException | LogicErrorException e) {
+        exs.join(e);
+      }
     }
 
     if (center() == null) {
@@ -152,6 +155,15 @@ public final class StellarSystem extends ConcreteCircularOrbit<FixedStar, Planet
     frame.setBounds(1000, 232, 388, 512);
     frame.setVisible(true);
     return frame;
+  }
+
+  @Override
+  public List<String> asList() {
+    List<String> list = new ArrayList<>();
+    list.add(String.format("Stellar ::= %s", Objects.requireNonNull(center()).toString()));
+
+    objects.forEach(p -> list.add(String.format("Planet ::= %s", p.toString())));
+    return list;
   }
 
   @Override
@@ -220,7 +232,8 @@ public final class StellarSystem extends ConcreteCircularOrbit<FixedStar, Planet
           loop.interrupt();
           btnPause.setText("Resume");
           break;
-        default: assert false;
+        default:
+          assert false;
       }
     });
     btnTimeSpanApply.addActionListener(e -> {
@@ -320,8 +333,8 @@ public final class StellarSystem extends ConcreteCircularOrbit<FixedStar, Planet
 @SuppressWarnings({"unused", "CheckStyle"})
 final class FixedStar extends PhysicalObject {
 
-  public final double radius;
-  public final double mass;
+  final double radius;
+  final double mass;
   public static String[] hint = new String[]{"Name", "Stellar radius", "Mass"};
 
   @Override
@@ -358,7 +371,8 @@ final class FixedStar extends PhysicalObject {
 
   @Override
   public String toString() {
-    return getName();
+    var _5 = new DecimalFormat("0.#####E0");
+    return String.format("<%s, %s, %s>", getName(), _5.format(radius), _5.format(mass));
   }
 }
 
@@ -371,8 +385,8 @@ class Planet extends PhysicalObject {
   /**
    * radius of the planet.
    */
-  public final double radius;
-  public final double v;
+  final double radius;
+  final double v;
   public static String[] hint = new String[]{"Name", "Form", "Color", "Planet radius",
       "Revolution radius", "Revolution speed", "Direction", "Position"};
 
@@ -433,6 +447,7 @@ class Planet extends PhysicalObject {
 
   /**
    * a planet.
+   *
    * @param name name of the planet
    * @param form form of the planet
    * @param color color of the planet
@@ -448,12 +463,17 @@ class Planet extends PhysicalObject {
     this.color = color;
     this.form = form;
     this.radius = radius;
-    this.v = (dir == Dir.CW ? -1 : 1) * Math.abs(v / track[0]);
+    this.v = (dir == Dir.CW ? -1 : 1) * abs(v / track[0]);
   }
 
   @Override
   public String toString() {
-    return getName();
+    var _3 = new DecimalFormat("0.###");
+    return String.format("<%s, %s, %s, %s, %s, %s, %s, %s>", getName(), form.toString(),
+        color, _3.format(radius),
+        new DecimalFormat("0.##E0").format(getR().getRect()[0]),
+        new DecimalFormat("0.##E0").format(abs(v * getR().getRect()[0])),
+        getDir().toString(), _3.format(getPos()));
   }
 }
 

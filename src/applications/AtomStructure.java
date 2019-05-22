@@ -10,14 +10,13 @@ import circularOrbit.ConcreteCircularOrbit;
 import circularOrbit.PhysicalObject;
 import exceptions.ExceptionGroup;
 import exceptions.LogicErrorException;
+import factory.CircularOrbitFactory;
 import java.awt.Color;
 import java.awt.FlowLayout;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -50,22 +49,14 @@ public final class AtomStructure extends ConcreteCircularOrbit<Kernel, Electron>
         Pattern.compile("NumberOfTracks\\s?::= (\\d+)")
     };
     ExceptionGroup exs = new ExceptionGroup();
-    File file = new File(path);
-    Set<String> txt = new TreeSet<>();
 
-    try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-      String buf = reader.readLine();
-      while (buf != null) {
-        buf = buf.trim();
-        if (!buf.isEmpty()) {
-          txt.add(buf);
-        }
-        buf = reader.readLine();
-      }
-    } catch (IOException e) {
-      exs.join(e);
+    var cf = CircularOrbitFactory.getDefault();
+    var txt = cf.read(path);
+    if (txt == null) {
+      exs.join(new IllegalArgumentException("reading " + path + " failed. returned. "));
       throw exs;
     }
+    txt.sort(String::compareTo);
 
     boolean[] flag = new boolean[]{false, false, false};
     for (int i = 0; i < 3; i++) {
@@ -203,6 +194,11 @@ public final class AtomStructure extends ConcreteCircularOrbit<Kernel, Electron>
     frame.setBounds(1000, 232, 364, spc.getY() + spc.getHeight() + 48);
     frame.setVisible(true);
     return frame;
+  }
+
+  @Override
+  public List<String> asList() {
+    throw new RuntimeException("not implement");
   }
 
   @Override

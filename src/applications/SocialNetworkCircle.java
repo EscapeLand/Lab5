@@ -10,12 +10,10 @@ import circularOrbit.ConcreteCircularOrbit;
 import circularOrbit.PhysicalObject;
 import exceptions.ExceptionGroup;
 import exceptions.LogicErrorException;
+import factory.CircularOrbitFactory;
+import graph.Graph;
 import java.awt.Color;
 import java.awt.FlowLayout;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -45,49 +43,49 @@ public final class SocialNetworkCircle extends ConcreteCircularOrbit<CentralUser
 
   @Override
   public boolean loadFromFile(String path) throws ExceptionGroup {
-    File file = new File(path);
     ExceptionGroup exs = new ExceptionGroup();
     List<User> params = new ArrayList<>();
     Set<String[]> record = new HashSet<>();
 
-    try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-      for (String buffer = reader.readLine(); buffer != null; buffer = reader.readLine()) {
-        if (buffer.isEmpty()) {
-          continue;
-        }
-        try {
-          Matcher m = Pattern.compile("([a-zA-Z]+)\\s?::=\\s?<(.*)>").matcher(buffer);
-          if (!m.find() || m.groupCount() != 2) {
-            throw new IllegalArgumentException("regex: cannot match (" + buffer + "), continued. ");
-          }
-          String[] list = (m.group(2).split("\\s*,\\s*"));
-          if (list.length != 3) {
-            throw new IllegalArgumentException("regex: (" + buffer + ")not 3 args. continued. ");
-          }
-          switch (m.group(1)) {
-            case "CentralUser":
-              changeCentre((CentralUser) produce(CentralUser.class, list));
-              break;
-            case "Friend":
-              params.add(new User(list[0], Integer.valueOf(list[1]),
-                  Enum.valueOf(Gender.class, list[2])));
-              break;
-            case "SocialTie":
-              record.add(list);
-              break;
-            default:
-              throw new IllegalArgumentException(
-                  "regex: unexpected label: " + m.group(1) + ". continued. ");
-          }
-        } catch (IllegalArgumentException e) {
-          exs.join(e);
-        }
-
-      }
-    } catch (IOException e) {
-      exs.join(e);
+    var cf = CircularOrbitFactory.getDefault();
+    var txt = cf.read(path);
+    if (txt == null) {
+      exs.join(new IllegalArgumentException("reading " + path + " failed. returned. "));
       throw exs;
     }
+
+    for (String buffer : txt) {
+      try {
+        Matcher m = Pattern.compile("([a-zA-Z]+)\\s?::=\\s?<(.*)>").matcher(buffer);
+        if (!m.find() || m.groupCount() != 2) {
+          throw new IllegalArgumentException("regex: cannot match (" + buffer + "), continued. ");
+        }
+        String[] list = (m.group(2).split("\\s*,\\s*"));
+        if (list.length != 3) {
+          throw new IllegalArgumentException("regex: (" + buffer + ")not 3 args. continued. ");
+        }
+        switch (m.group(1)) {
+          case "CentralUser":
+            changeCentre((CentralUser) produce(CentralUser.class, list));
+            break;
+          case "Friend":
+            params.add(new User(list[0], Integer.valueOf(list[1]),
+                Enum.valueOf(Gender.class, list[2])));
+            break;
+          case "SocialTie":
+            record.add(list);
+            break;
+          default:
+            throw new IllegalArgumentException(
+                "regex: unexpected label: " + m.group(1) + ". continued. ");
+        }
+      } catch (IllegalArgumentException e) {
+        exs.join(e);
+      }
+
+    }
+    txt.clear();
+    System.gc();
 
     if (center() == null) {
       throw new LogicErrorException("center is not set. returned. ");
@@ -141,6 +139,26 @@ public final class SocialNetworkCircle extends ConcreteCircularOrbit<CentralUser
     frame.setBounds(1000, 232, 396, 512);
     frame.setVisible(true);
     return frame;
+  }
+
+  @Override
+  public List<String> asList() {
+    final var _3 = new DecimalFormat("0.###");
+    List<String> list = new ArrayList<>();
+    list.add(String.format("CentralUser ::= %s", Objects.requireNonNull(center()).toString()));
+    list.add("");
+
+    Graph<PhysicalObject> graph = getGraph();
+    var relations = graph.edges();
+    relations.forEach((orr, f) -> {
+      PhysicalObject a = (PhysicalObject) orr[0];
+      PhysicalObject b = (PhysicalObject) orr[1];
+      list.add(String.format("SocialTie ::= <%s, %s, %s>", a.getName(), b.getName(), _3.format(f)));
+    });
+
+    list.add("");
+    objects.forEach(u -> list.add(String.format("Friend ::= %s", u.toString())));
+    return list;
   }
 
   @Override

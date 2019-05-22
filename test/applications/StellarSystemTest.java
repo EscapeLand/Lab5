@@ -50,8 +50,15 @@ public class StellarSystemTest {
       s.loadFromFile("input/StellarSystem_error.txt");
     } catch (ExceptionGroup exceptions) {
       assertFalse(exceptions.isEmpty());
-      System.out.println(exceptions.size());
     }
 
+  }
+
+  @Test
+  public void asList() {
+    StellarSystem s = new StellarSystem();
+    s.loadFromFile("input/StellarSystem.txt");
+    var l = s.asList();
+    l.forEach(System.out::println);
   }
 }

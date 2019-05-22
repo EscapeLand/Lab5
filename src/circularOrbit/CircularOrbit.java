@@ -3,6 +3,7 @@ package circularOrbit;
 import exceptions.ExceptionGroup;
 import graph.Graph;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 import javax.swing.JFrame;
@@ -146,4 +147,10 @@ public interface CircularOrbit<L extends PhysicalObject, E extends PhysicalObjec
    * @return the number of objects on tracks. (center is NOT included)
    */
   int size();
+
+  /**
+   * transform a CircularOrbit to a list, to save as file, etc.
+   * @return a list contains all the info of the CircularOrbit.
+   */
+  List<String> asList();
 }

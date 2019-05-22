@@ -92,4 +92,12 @@ public class SocialNetworkCircleTest {
       System.out.println(exceptions.size());
     }
   }
+
+  @Test
+  public void testAsList() {
+    SocialNetworkCircle s = new SocialNetworkCircle();
+    s.loadFromFile("input/SocialNetworkCircle.txt");
+    var l = s.asList();
+    l.forEach(System.out::println);
+  }
 }
