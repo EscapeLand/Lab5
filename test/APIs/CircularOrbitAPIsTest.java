@@ -20,8 +20,8 @@ public class CircularOrbitAPIsTest {
 	private CircularOrbit a;
 	
 	public CircularOrbitAPIsTest(){
-		s = cf.createAndLoad("input/StellarSystem.txt");
-		a = cf.createAndLoad("input/AtomicStructure.txt");
+		s = cf.createAndLoad("input/StellarSystem.txt", false);
+		a = cf.createAndLoad("input/AtomicStructure.txt", false);
 	}
 	
 	@Test @SuppressWarnings("unchecked")
@@ -51,7 +51,7 @@ public class CircularOrbitAPIsTest {
 	
 	@Test @SuppressWarnings("unchecked")
 	public void getLogicalDistance() {
-		var c = cf.createAndLoad("input/SocialNetworkCircle.txt");
+		var c = cf.createAndLoad("input/SocialNetworkCircle.txt", false);
 		assert c != null;
 		var center = c.center();
 		c.forEach(u->{

@@ -1,6 +1,6 @@
 package APIs;
 
-import static APIs.CircularOrbitAPIs.transform;
+import static APIs.Tools.transform;
 import static exceptions.GeneralLogger.info;
 import static exceptions.GeneralLogger.loadInfo;
 import static exceptions.GeneralLogger.loadWarning;
@@ -99,7 +99,7 @@ public class CircularOrbitHelper<L extends PhysicalObject, E extends PhysicalObj
     }
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     frame.setVisible(true);
-    info("visualize", new String[]{c.toString()});
+    info(c.toString());
     c.process(c1 -> frame.refresh(c1, true));
   }
 
@@ -274,7 +274,7 @@ public class CircularOrbitHelper<L extends PhysicalObject, E extends PhysicalObj
 
   @SuppressWarnings("unused")
   private void run(@NotNull StellarSystem s) {
-    info("run", new String[]{s.toString()});
+    info(s.toString());
     Map<PhysicalObject, double[]> current = new HashMap<>();
     cells.forEach((p, o) -> current.put(p, xy(p)));
 
@@ -519,7 +519,7 @@ public class CircularOrbitHelper<L extends PhysicalObject, E extends PhysicalObj
       }
 
       try {
-        s = factory.createAndLoad(last);
+        s = factory.createAndLoad(last, false);
       } catch (ExceptionGroup exs) {
         alert(null, "Errors in profile", exs.getMessage());
         warning(exs);

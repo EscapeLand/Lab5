@@ -24,6 +24,7 @@ public class GeneralLogger {
   static {
     warning = Logger.getLogger("CircularOrbit.GeneralExceptionLogger");
     info = Logger.getLogger("CircularOrbit.GeneralInfoLogger");
+    info.setLevel(Level.OFF);
     info.getParent().getHandlers()[0].setLevel(Level.SEVERE);
     try {
       File lp = new File("log/");
@@ -54,6 +55,7 @@ public class GeneralLogger {
 
   /**
    * log a exception as warning.
+   *
    * @param e the exception to log.
    */
   public static void warning(Exception e) {
@@ -68,21 +70,24 @@ public class GeneralLogger {
 
   /**
    * log an operation and its args.
-   * @param op operation
+   *
    * @param args operation args.
    */
-  public static void info(String op, String[] args) {
-    String s = op + " "
-        + String.join(", ", args);
-    info.info(s);
-  }
-
-  public static void info(String msg) {
-    info.info(msg);
+  public static void info(Object... args) {
+    if (info.getLevel() == Level.OFF) {
+      return;
+    }
+    StringBuilder s = new StringBuilder();
+    s.append(Thread.currentThread().getStackTrace()[2].getMethodName());
+    for (Object arg : args) {
+      s.append(' ').append(arg.toString());
+    }
+    info.info(s.toString());
   }
 
   /**
    * log a exception as severe.
+   *
    * @param e the exception.
    */
   public static void severe(Exception e) {
@@ -92,6 +97,7 @@ public class GeneralLogger {
 
   /**
    * load info from a file.
+   *
    * @param path log path of info.
    * @return parsed info list.
    * @throws IOException if error when reading file.
@@ -113,6 +119,7 @@ public class GeneralLogger {
 
   /**
    * load warnings from a file.
+   *
    * @param path log path of exceptions.
    * @return parsed exception list.
    * @throws IOException if error when load files.

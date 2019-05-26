@@ -19,6 +19,8 @@ public class Track<E extends PhysicalObject> {
   private final double[] R;
   /**
    * the default comparator of two tracks.
+   *
+   * @see Arrays#compare(double[], double[])
    */
   public static final Comparator<Track> defaultComparator = (a, b) -> Arrays.compare(a.R, b.R);
 
@@ -32,6 +34,7 @@ public class Track<E extends PhysicalObject> {
 
   /**
    * Track with several args.
+   *
    * @param track the radius. no larger than 2 elements.
    */
   public Track(double[] track) {
@@ -51,6 +54,7 @@ public class Track<E extends PhysicalObject> {
 
   /**
    * track with several args.
+   *
    * @param track the radius. no larger than 2 elements.
    */
   public Track(Double[] track) {
@@ -86,11 +90,13 @@ public class Track<E extends PhysicalObject> {
 
   /**
    * compare two tracks.
+   *
    * @param a one track
    * @param b another track
    * @return a negative integer, zero, or a positive integer as the first argument is less than,
-     equal to, or greater than the second.
-   * @see Comparator#compare(Object, Object)
+   * equal to, or greater than the second.
+   * @see Track#defaultComparator
+   * @see Comparator<Track>#compare(Track, Track)
    */
   public static int compare(Track a, Track b) {
     return defaultComparator.compare(a, b);
@@ -98,6 +104,7 @@ public class Track<E extends PhysicalObject> {
 
   /**
    * get arg array of the track.
+   *
    * @return radius of the track, length == 2. ({long half shaft, short half shaft})
    */
   public double[] getRect() {
@@ -106,6 +113,7 @@ public class Track<E extends PhysicalObject> {
 
   /**
    * get arg array of the track.
+   *
    * @return radius of the track, length == 2. ({long half shaft, short half shaft})
    */
   public Double[] getRect_alt() {

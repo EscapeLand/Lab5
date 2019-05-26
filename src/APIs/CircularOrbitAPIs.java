@@ -5,7 +5,6 @@ import circularOrbit.PhysicalObject;
 import graph.Graph;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -14,10 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import track.Track;
 
 @SuppressWarnings("CheckStyle")
@@ -185,55 +180,6 @@ public class CircularOrbitAPIs {
         new ArrayList<>(objDif1.values()), new ArrayList<>(objDif2.values()));
   }
 
-  /**
-   * see std::find_if in C++.
-   * @param col collections to find.
-   * @param pred predicate to apply.
-   * @param <E> col, type.
-   * @return null if not found. else the first element meet the predicate.
-   */
-  @Nullable
-  public static <E> E find_if(@NotNull Iterable<E> col, Predicate<E> pred) {
-    for (E e : col) {
-      if (pred.test(e)) {
-        return e;
-      }
-    }
-    return null;
-  }
-
-  /**
-   * see std::transform in C++.
-   * @param src Collection to transform from.
-   * @param des Collection to transform to.
-   * @param func function receive O, and cast it to R.
-   * @param <O> src, type.
-   * @param <R> des, type.
-   */
-  public static <O, R> void transform(@NotNull Collection<O> src, @NotNull Collection<R> des,
-      Function<O, R> func) {
-    des.clear();
-    src.forEach(s -> des.add(func.apply(s)));
-  }
-
-  /**
-   * transform an array to another type.
-   * @param src array to transform from.
-   * @param func function receive O, and cast it to R.
-   * @param <O> src, type
-   * @param <R> return value, type.
-   * @return array of R.
-   * @see CircularOrbitAPIs#transform(Collection, Collection, Function)
-   */
-  @NotNull
-  @SuppressWarnings("unchecked")
-  public static <O, R> R[] transform(@NotNull O[] src, Function<O, R> func) {
-    var arr = new Object[src.length];
-    for (int i = 0; i < src.length; i++) {
-      arr[i] = func.apply(src[i]);
-    }
-    return (R[]) arr;
-  }
 }
 
 @SuppressWarnings("CheckStyle")

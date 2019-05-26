@@ -1,7 +1,6 @@
 package circularOrbit;
 
 import factory.CircularOrbitFactory;
-import factory.DefaultCircularOrbitFactory;
 import factory.PhysicalObjectFactory;
 import org.junit.Test;
 
@@ -33,7 +32,7 @@ public class CircularOrbitTest {
 	
 	@Test @SuppressWarnings("unchecked")
 	public void testGetTrackAndObjectOnTrack(){
-		var b = cf.createAndLoad("input/AtomicStructure.txt");
+		var b = cf.createAndLoad("input/AtomicStructure.txt", false);
 		assert b != null;
 		Set<Double[]> bt = b.getTracks();
 		assertEquals(5, bt.size());
@@ -42,7 +41,7 @@ public class CircularOrbitTest {
 			assertEquals(test[i], b.getObjectsOnTrack(new double[]{i + 1}).size());
 		}
 		
-		var a = cf.createAndLoad("input/AtomicStructure_Medium.txt");
+		var a = cf.createAndLoad("input/AtomicStructure_Medium.txt", false);
 		assert a != null;
 		bt = a.getTracks();
 		assertEquals(6, bt.size());
@@ -55,7 +54,7 @@ public class CircularOrbitTest {
 	
 	@Test
 	public void testQuery(){
-		var c = cf.createAndLoad("input/StellarSystem.txt");
+		var c = cf.createAndLoad("input/StellarSystem.txt", false);
 		assert c != null;
 		assertNotNull(c.query("Earth"));
 		assertNotNull(c.query("Sun"));
@@ -65,7 +64,7 @@ public class CircularOrbitTest {
 	
 	@Test
 	public void testRemoveTrack(){
-		var c = cf.createAndLoad("input/AtomicStructure.txt");
+		var c = cf.createAndLoad("input/AtomicStructure.txt", false);
 		assert c != null;
 		assertEquals(37, c.size());
 		assertTrue(c.removeTrack(new double[]{1}));
@@ -93,7 +92,7 @@ public class CircularOrbitTest {
 	
 	@Test @SuppressWarnings("unchecked")
 	public void testMoveObject(){
-		var c = cf.createAndLoad("input/AtomicStructure.txt");
+		var c = cf.createAndLoad("input/AtomicStructure.txt", false);
 		assert c != null;
 		var s_1 = c.getObjectsOnTrack(new double[]{1});
 		assertEquals(2, s_1.size());
@@ -109,7 +108,7 @@ public class CircularOrbitTest {
 	
 	@Test
 	public void testSetRelationship(){
-		var c = cf.createAndLoad("input/SocialNetworkCircle.txt");
+		var c = cf.createAndLoad("input/SocialNetworkCircle.txt", false);
 		assert c != null;
 		var a = c.query("TommyWong");
 		var b = c.query("LisaWong");

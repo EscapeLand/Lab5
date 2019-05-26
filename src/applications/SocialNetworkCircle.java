@@ -1,14 +1,16 @@
 package applications;
 
 import static APIs.CircularOrbitAPIs.getLogicalDistance;
-import static APIs.CircularOrbitAPIs.transform;
 import static APIs.CircularOrbitHelper.generatePanel;
+import static APIs.Tools.transform;
 import static factory.PhysicalObjectFactory.produce;
 
+import APIs.Tools;
 import circularOrbit.CircularOrbit;
 import circularOrbit.ConcreteCircularOrbit;
 import circularOrbit.PhysicalObject;
 import exceptions.ExceptionGroup;
+import exceptions.GeneralLogger;
 import exceptions.LogicErrorException;
 import factory.CircularOrbitFactory;
 import graph.Graph;
@@ -44,8 +46,8 @@ public final class SocialNetworkCircle extends ConcreteCircularOrbit<CentralUser
   @Override
   public boolean loadFromFile(String path) throws ExceptionGroup {
     ExceptionGroup exs = new ExceptionGroup();
-    List<User> params = new ArrayList<>();
-    Set<String[]> record = new HashSet<>();
+    List<String[]> record = new ArrayList<>();
+    Map<String, PhysicalObject> userMap = new HashMap<>();
 
     var cf = CircularOrbitFactory.getDefault();
     var txt = cf.read(path);
@@ -54,73 +56,96 @@ public final class SocialNetworkCircle extends ConcreteCircularOrbit<CentralUser
       throw exs;
     }
 
-    for (String buffer : txt) {
-      try {
-        Matcher m = Pattern.compile("([a-zA-Z]+)\\s?::=\\s?<(.*)>").matcher(buffer);
-        if (!m.find() || m.groupCount() != 2) {
-          throw new IllegalArgumentException("regex: cannot match (" + buffer + "), continued. ");
+    Consumer<List<String>> load = ls -> {
+      for (String buffer : ls) {
+        try {
+          Matcher m = Pattern.compile("([a-zA-Z]+)\\s*::=\\s*<(.*)>").matcher(buffer);
+          if (!m.find() || m.groupCount() != 2) {
+            throw new IllegalArgumentException("regex: cannot match (" + buffer + "), continued. ");
+          }
+          String[] list = (m.group(2).split("\\s*,\\s*"));
+          if (list.length != 3) {
+            throw new IllegalArgumentException("regex: (" + buffer + ")not 3 args. continued. ");
+          }
+          switch (m.group(1)) {
+            case "CentralUser":
+              changeCentre((CentralUser) produce(CentralUser.class, list));
+              break;
+            case "Friend":
+              synchronized (userMap) {
+                var u = new User(list[0], Integer.valueOf(list[1]),
+                    Enum.valueOf(Gender.class, list[2]));
+                super.addObject(u);
+                userMap.put(list[0], u);
+              }
+              break;
+            case "SocialTie":
+              synchronized (record) {
+                record.add(list);
+              }
+              break;
+            default:
+              throw new IllegalArgumentException(
+                  "regex: unexpected label: " + m.group(1) + ". continued. ");
+          }
+        } catch (IllegalArgumentException e) {
+          exs.join(e);
         }
-        String[] list = (m.group(2).split("\\s*,\\s*"));
-        if (list.length != 3) {
-          throw new IllegalArgumentException("regex: (" + buffer + ")not 3 args. continued. ");
+
+      }
+    };
+    Consumer<List<String[]>> addRelation = ls -> {
+      for (String[] list : ls) {
+        if (list[0].equals(list[1])) {
+          exs.join(
+              new LogicErrorException("relationship: " + list[0]
+                  + "->" + list[1] + ". continued. "));
+          continue;
         }
-        switch (m.group(1)) {
-          case "CentralUser":
-            changeCentre((CentralUser) produce(CentralUser.class, list));
-            break;
-          case "Friend":
-            params.add(new User(list[0], Integer.valueOf(list[1]),
-                Enum.valueOf(Gender.class, list[2])));
-            break;
-          case "SocialTie":
-            record.add(list);
-            break;
-          default:
-            throw new IllegalArgumentException(
-                "regex: unexpected label: " + m.group(1) + ". continued. ");
+
+        PhysicalObject q1 = userMap.get(list[0]);
+        PhysicalObject q2 = userMap.get(list[1]);
+
+        if (q1 == null || q2 == null) {
+          exs.join(new LogicErrorException("warning: " + (q1 == null ? list[0] + " " : "")
+              + (q2 == null ? list[1] + " " : "") + "not defined. continued. "));
+          continue;
         }
-      } catch (IllegalArgumentException e) {
-        exs.join(e);
+
+        try {
+          var split = list[2].split(".");
+          if (split.length == 2 && split[1].length() > 3) {
+            split[1] = split[1].substring(0, 3);
+            var tmp = list[2];
+            list[2] = String.join(".", split);
+            exs.join(new IllegalArgumentException(tmp + " more than 3 decimal. truncated. "));
+          }
+          float f = Float.valueOf(list[2]);
+          synchronized (this) {
+            super.setRelation(q1, q2, f);
+          }
+        } catch (IllegalArgumentException e) {
+          exs.join(e);
+        }
+      }
+    };
+    try {
+      Tools.assignThread(txt, load, 50000);
+      txt.clear();
+      System.gc();
+
+      var center = center();
+      if (center == null) {
+        exs.join(new LogicErrorException("center is not set. returned. "));
+        throw exs;
+      } else {
+        userMap.put(center.getName(), center);
       }
 
-    }
-    txt.clear();
-    System.gc();
-
-    if (center() == null) {
-      throw new LogicErrorException("center is not set. returned. ");
-    }
-
-    params.forEach(super::addObject);
-
-    for (String[] list : record) {
-      if (list[0].equals(list[1])) {
-        exs.join(
-            new LogicErrorException("relationship: " + list[0] + "->" + list[1] + ". continued. "));
-        continue;
-      }
-
-      PhysicalObject q1 = query(list[0]);
-      PhysicalObject q2 = query(list[1]);
-
-      if (q1 == null || q2 == null) {
-        exs.join(new LogicErrorException("warning: " + (q1 == null ? list[0] + " " : "")
-            + (q2 == null ? list[1] + " " : "") + "not defined. continued. "));
-        continue;
-      }
-
-      try {
-        var split = list[2].split(".");
-        if (split.length == 2 && split[1].length() > 3) {
-          split[1] = split[1].substring(0, 3);
-          var tmp = list[2];
-          list[2] = String.join(".", split);
-          exs.join(new IllegalArgumentException(tmp + " more than 3 decimal. truncated. "));
-        }
-        super.setRelation(q1, q2, Float.valueOf(list[2]));
-      } catch (IllegalArgumentException e) {
-        exs.join(e);
-      }
+      Tools.assignThread(record, addRelation, 40000);
+    } catch (InterruptedException e) {
+      GeneralLogger.severe(e);
+      System.exit(1);
     }
 
     if (exs.isEmpty()) {
@@ -149,15 +174,34 @@ public final class SocialNetworkCircle extends ConcreteCircularOrbit<CentralUser
     list.add("");
 
     Graph<PhysicalObject> graph = getGraph();
-    var relations = graph.edges();
-    relations.forEach((orr, f) -> {
-      PhysicalObject a = (PhysicalObject) orr[0];
-      PhysicalObject b = (PhysicalObject) orr[1];
-      list.add(String.format("SocialTie ::= <%s, %s, %s>", a.getName(), b.getName(), _3.format(f)));
-    });
+    var relations = new ArrayList<>(graph.edges().entrySet());
+    try {
+      Tools.assignThread(relations, rs -> rs.forEach(orr -> {
+        PhysicalObject a = (PhysicalObject) orr.getKey()[0];
+        PhysicalObject b = (PhysicalObject) orr.getKey()[1];
+        var str = String.format("SocialTie ::= <%s, %s, %s>", a.getName(), b.getName(),
+            _3.format(orr.getValue()));
+        synchronized (list) {
+          list.add(str);
+        }
+      }), 5000);
+    } catch (InterruptedException e) {
+      GeneralLogger.severe(e);
+      System.exit(1);
+    }
 
     list.add("");
-    objects.forEach(u -> list.add(String.format("Friend ::= %s", u.toString())));
+    var objects = new ArrayList<>(this.objects);
+    try {
+      Tools.assignThread(objects,
+          os -> os.forEach(u -> {
+            var str = String.format("Friend ::= %s", u.toString());
+            list.add(str);
+          }), 6000);
+    } catch (InterruptedException e) {
+      GeneralLogger.severe(e);
+      System.exit(1);
+    }
     return list;
   }
 
@@ -354,22 +398,38 @@ public final class SocialNetworkCircle extends ConcreteCircularOrbit<CentralUser
    */
   private void updateR() {
     var relationship = getGraph();
-    Set<PhysicalObject> cur = new HashSet<>(1);
+    List<PhysicalObject> cur = new ArrayList<>(1);
     cur.add(center());
     var vertex = relationship.vertices();
     vertex.remove(center());
     int n = vertex.size() + 1;
 
     for (int k = 0; !vertex.isEmpty() && vertex.size() < n; k++) {
-      Set<PhysicalObject> rtSet = new HashSet<>();
-      cur.forEach(p -> rtSet.addAll(relationship.targets(p).keySet()));
+      List<PhysicalObject> rtSet = new ArrayList<>();
       final int tmp = k;
-      n = vertex.size();
-      rtSet.forEach(p -> {
+      Consumer<List<PhysicalObject>> assign = rs -> rs.forEach(p -> {
         if (vertex.remove(p)) {
-          moveObject((User) p, new double[]{tmp + 1});
+          synchronized (this) {
+            super.moveObject((User) p, new double[]{tmp + 1});
+          }
         }
       });
+      Consumer<List<PhysicalObject>> add = rs -> rs
+          .forEach(p -> {
+            Set<PhysicalObject> tmpSet;
+            tmpSet = relationship.targets(p).keySet();
+            synchronized (rtSet) {
+              rtSet.addAll(tmpSet);
+            }
+          });
+      try {
+        Tools.assignThread(cur, add, 3000);
+        n = vertex.size();
+        Tools.assignThread(rtSet, assign, 5000);
+      } catch (InterruptedException e) {
+        GeneralLogger.severe(e);
+        System.exit(1);
+      }
       cur = rtSet;
     }
 
@@ -385,7 +445,7 @@ public final class SocialNetworkCircle extends ConcreteCircularOrbit<CentralUser
       }
     });
 
-    checkRep();
+    //checkRep();
   }
 
   /**

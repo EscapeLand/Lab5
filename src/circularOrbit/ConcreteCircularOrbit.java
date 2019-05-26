@@ -1,10 +1,10 @@
 package circularOrbit;
 
-import static APIs.CircularOrbitAPIs.find_if;
 import static APIs.CircularOrbitAPIs.getObjectDistributionEntropy;
-import static APIs.CircularOrbitAPIs.transform;
 import static APIs.CircularOrbitHelper.alert;
 import static APIs.CircularOrbitHelper.generatePanel;
+import static APIs.Tools.find_if;
+import static APIs.Tools.transform;
 import static circularOrbit.PhysicalObject.getDefaultComparator;
 import static exceptions.GeneralLogger.info;
 import static factory.PhysicalObjectFactory.produce;
@@ -85,7 +85,7 @@ public abstract class ConcreteCircularOrbit<L extends PhysicalObject, E extends 
       throw new IllegalArgumentException(
           "warning: radius cannot be negative while not equal to -1. ");
     }
-    info("addTrack", new String[]{Arrays.toString(r)});
+    info(Arrays.toString(r));
     return tracks.add(new Track<>(r));
   }
 
@@ -103,7 +103,7 @@ public abstract class ConcreteCircularOrbit<L extends PhysicalObject, E extends 
         it.remove();
       }
     }
-    info("removeTrack", new String[]{Arrays.toString(r)});
+    info(Arrays.toString(r));
     return b;
   }
 
@@ -112,7 +112,7 @@ public abstract class ConcreteCircularOrbit<L extends PhysicalObject, E extends 
     if (Objects.equals(centre, newCenter)) {
       return centre;
     }
-    info("changeCentre", new String[]{newCenter.toString()});
+    info(newCenter.toString());
     L prev = centre;
     centre = newCenter;
     return prev;
@@ -141,14 +141,14 @@ public abstract class ConcreteCircularOrbit<L extends PhysicalObject, E extends 
     obj.setR(tmp);
     addTrack(to);
 
-    info("moveObject", new String[]{obj.toString(), Arrays.toString(to)});
+    info(obj, Arrays.toString(to));
     return true;
   }
 
   @Override
   public boolean removeObject(E obj) {
     assert obj != null;
-    info("removeObject", new String[]{obj.toString()});
+    info(obj.toString());
     relationship.remove(obj);
     return objects.remove(obj);
   }
@@ -161,7 +161,7 @@ public abstract class ConcreteCircularOrbit<L extends PhysicalObject, E extends 
     relationship.add(a);
     relationship.add(b);
     relationship.set(a, b, val);
-    info("setRelation", new String[]{a.toString(), b.toString(), String.valueOf(val)});
+    info(a, b, val);
   }
 
   @NotNull
@@ -173,9 +173,9 @@ public abstract class ConcreteCircularOrbit<L extends PhysicalObject, E extends 
   @Override
   @Nullable
   public PhysicalObject query(@NotNull String objName) {
-    info("query", new String[]{objName});
+    info(objName);
     final String name = objName.trim();
-    if (centre.getName().equals(name)) {
+    if (centre != null && centre.getName().equals(name)) {
       return centre;
     }
     return find_if(objects, e -> e.getName().equals(objName));
@@ -248,7 +248,8 @@ public abstract class ConcreteCircularOrbit<L extends PhysicalObject, E extends 
         case 1:
           removeTrack(new double[]{d});
           break;
-        default: assert false;
+        default:
+          assert false;
       }
       end.accept(this);
     });
@@ -339,27 +340,31 @@ public abstract class ConcreteCircularOrbit<L extends PhysicalObject, E extends 
   }
 
   @Override
-  public boolean addObject(E newObject) {
-    assert newObject != null;
-    info("addObject", new String[]{newObject.toString()});
+  public boolean addObject(@NotNull E newObject) {
+    info(newObject);
     tracks.add(newObject.getR());
     return objects.add(newObject);
   }
 
   /**
    * get copy of objects on a track.
+   *
    * @param r the radius of the track
    * @return copy of the collection in which objects are on the given track.
    */
   @NotNull
   protected Set<E> getObjectsOnTrack(Track r) {
     assert r != null;
+    TreeSet<E> objects = (TreeSet<E>) this.objects;
     final Set<E> ret = new TreeSet<>(E.getDefaultComparator());
-    forEach(e -> {
-      if (e.getR().equals(r)) {
-        ret.add(eClass.cast(e));
+    for (E e : objects) {
+      var t = Track.compare(r, e.getR());
+      if (t == 0) {
+        ret.add(e);
+      } else if (t > 0) {
+        break;
       }
-    });
+    }
     return ret;
   }
 

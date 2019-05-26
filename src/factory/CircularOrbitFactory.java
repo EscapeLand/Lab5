@@ -22,8 +22,17 @@ import org.jetbrains.annotations.Nullable;
 @SuppressWarnings("UnnecessaryInterfaceModifier")
 public interface CircularOrbitFactory {
 
+  /**
+   * Create a CircularOrbit and load from file.
+   *
+   * @param loadFrom path of the profile.
+   * @param ignoreException whether to return the value if some warning happens when loading from
+   file, and whether check RI after loading.
+   * @see CircularOrbit#loadFromFile(String)
+   */
   @Nullable
-  public CircularOrbit createAndLoad(String loadFrom) throws ExceptionGroup;
+  public CircularOrbit createAndLoad(String loadFrom, boolean ignoreException)
+      throws ExceptionGroup;
 
   @Nullable
   public CircularOrbit create(String type);

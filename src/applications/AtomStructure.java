@@ -4,7 +4,7 @@ import static APIs.CircularOrbitHelper.generatePanel;
 import static exceptions.GeneralLogger.info;
 import static factory.PhysicalObjectFactory.produce;
 
-import APIs.CircularOrbitAPIs;
+import APIs.Tools;
 import circularOrbit.CircularOrbit;
 import circularOrbit.ConcreteCircularOrbit;
 import circularOrbit.PhysicalObject;
@@ -13,7 +13,6 @@ import exceptions.LogicErrorException;
 import factory.CircularOrbitFactory;
 import java.awt.Color;
 import java.awt.FlowLayout;
-import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -173,7 +172,7 @@ public final class AtomStructure extends ConcreteCircularOrbit<Kernel, Electron>
     caretaker.setMementos(from, to, saveMemento(from, to));
 
     for (int i = 0; i < number; i++) {
-      Electron e = CircularOrbitAPIs.find_if(this,
+      Electron e = Tools.find_if(this,
           t -> t.getR().equals(transFrom) && t.isGround() == up);
       if (e == null || !moveObject(e, to)) {
         recover(from, to);
@@ -181,8 +180,8 @@ public final class AtomStructure extends ConcreteCircularOrbit<Kernel, Electron>
       }
       e.switchState(!up);
     }
-    info("transit",
-        new String[]{Arrays.toString(from), Arrays.toString(to), String.valueOf(number)});
+    info(
+        Arrays.toString(from), Arrays.toString(to), String.valueOf(number));
     return true;
   }
 
@@ -215,7 +214,7 @@ public final class AtomStructure extends ConcreteCircularOrbit<Kernel, Electron>
     panel.setBounds(8, 176, 336, 32);
 
     Set<Track> tmp = new TreeSet<>(Track.defaultComparator);
-    CircularOrbitAPIs.transform(getTracks(), tmp, Track::new);
+    Tools.transform(getTracks(), tmp, Track::new);
     JComboBox<Track> cmbS1 = new JComboBox<>(tmp.toArray(new Track[0]));
     JComboBox<Track> cmbS2 = new JComboBox<>(tmp.toArray(new Track[0]));
     cmbS2.setSelectedIndex(1);

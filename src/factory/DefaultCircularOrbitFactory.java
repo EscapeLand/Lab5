@@ -18,13 +18,22 @@ public class DefaultCircularOrbitFactory implements CircularOrbitFactory {
 
   @Override
   @Nullable
-  public CircularOrbit createAndLoad(String loadFrom) throws ExceptionGroup {
+  public CircularOrbit createAndLoad(String loadFrom, boolean ignoreException)
+      throws ExceptionGroup {
     CircularOrbit c = create(loadFrom);
     if (c == null) {
       return null;
     }
-    c.loadFromFile(loadFrom);
-    c.checkRep();
+    try {
+      c.loadFromFile(loadFrom);
+    } catch (ExceptionGroup exceptions) {
+      if (!ignoreException) {
+        throw exceptions;
+      }
+    }
+    if (!ignoreException) {
+      c.checkRep();
+    }
     return c;
   }
 

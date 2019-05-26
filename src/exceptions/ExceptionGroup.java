@@ -15,7 +15,7 @@ public class ExceptionGroup extends RuntimeException implements Iterable<Excepti
    * @param ex the exception to join.
    * @return true if success.
    */
-  public boolean join(Exception ex) {
+  public synchronized boolean join(@NotNull Exception ex) {
     if (ex instanceof ExceptionGroup) {
       return merge((ExceptionGroup) ex);
     } else {
