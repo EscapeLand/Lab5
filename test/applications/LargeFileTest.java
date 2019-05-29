@@ -15,6 +15,7 @@ public class LargeFileTest {
   @Test
   public void testStellar_reader(){
     var cf = CircularOrbitFactory.getDefault();
+    cf.setReadingMethod(CircularOrbitFactory.readerStrategy);
     var start = System.currentTimeMillis();
     assertEquals(320001, Objects.requireNonNull(cf.read("input/StellarSystem_5.txt")).size());
     var end = System.currentTimeMillis();
@@ -44,6 +45,7 @@ public class LargeFileTest {
   @Test
   public void testSocial_reader(){
     var cf = CircularOrbitFactory.getDefault();
+    cf.setReadingMethod(CircularOrbitFactory.readerStrategy);
     var start = System.currentTimeMillis();
     assertEquals(896581, Objects.requireNonNull(cf.read("input/SocialNetworkCircle_5.txt")).size());
     var end = System.currentTimeMillis();

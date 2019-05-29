@@ -37,6 +37,7 @@ import track.Track;
 
 /**
  * Mutable. an implement of CircularOrbit.
+ * thread-NOT-safe.
  *
  * @param <L> the type of the center.
  * @param <E> type of the objects on object

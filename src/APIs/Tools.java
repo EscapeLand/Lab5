@@ -3,6 +3,8 @@ package APIs;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -10,6 +12,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class Tools {
+
+  private Tools() {
+  }
 
   /**
    * see std::find_if in C++.
@@ -64,6 +69,8 @@ public class Tools {
     return (R[]) arr;
   }
 
+  private static ExecutorService fixedPool;
+
   /**
    * separate a task on a large list to multi-thread task.
    *
@@ -71,32 +78,35 @@ public class Tools {
    * @param consumer task on each block.
    * @param threshold size on each block.
    * @param <E> class of list's elements.
+   * @apiNote better use for-loop in consumer, since for-loop is better for random-access
+     collections.
    */
   public static <E> void assignThread(List<E> list, Consumer<List<E>> consumer, int threshold)
       throws InterruptedException {
+    if (fixedPool == null) {
+      fixedPool = Executors.newFixedThreadPool(160);
+      System.out.println("thread pool initialed: 160");
+    }
     final int amount = list.size();
     if (amount < threshold) {
       consumer.accept(list);
     } else {
       int threadNum = (int) Math.floor(amount / threshold);
       int pos = 0;
-      Thread[] threads = new Thread[threadNum];
       CountDownLatch latch = new CountDownLatch(threadNum);
       for (int i = 0; i < threadNum - 1; i++) {
         var sub = list.subList(pos, pos + threshold);
-        threads[i] = new Thread(() -> {
+        fixedPool.execute(() -> {
           consumer.accept(sub);
           latch.countDown();
         });
-        threads[i].start();
         pos += threshold;
       }
       var rest = list.subList(pos, amount);
-      threads[threadNum - 1] = new Thread(() -> {
+      fixedPool.execute(() -> {
         consumer.accept(rest);
         latch.countDown();
       });
-      threads[threadNum - 1].start();
       latch.await();
     }
   }

@@ -28,6 +28,7 @@ public class LargeFileWritingTest {
   @Test
   public void testStellar_writer() {
     var cf = CircularOrbitFactory.getDefault();
+    cf.setWritingMethod(CircularOrbitFactory.writerStrategy);
     var start = System.currentTimeMillis();
     cf.write("out/txt/stellar_writer", sList);
     var end = System.currentTimeMillis();
@@ -57,6 +58,7 @@ public class LargeFileWritingTest {
   @Test
   public void testSocial_writer() {
     var cf = CircularOrbitFactory.getDefault();
+    cf.setWritingMethod(CircularOrbitFactory.writerStrategy);
     var start = System.currentTimeMillis();
     cf.write("out/txt/social_writer", cList);
     var end = System.currentTimeMillis();

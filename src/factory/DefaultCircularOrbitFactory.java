@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 public class DefaultCircularOrbitFactory implements CircularOrbitFactory {
 
   private Function<String, List<String>> readingMethod = readerStrategy;
-  private BiPredicate<String, List<String>> writingMethod = writerStrategy;
+  private BiPredicate<String, List<String>> writingMethod = streamStrategy;
 
   @Override
   @Nullable

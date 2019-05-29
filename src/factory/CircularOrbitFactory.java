@@ -2,6 +2,8 @@ package factory;
 
 import circularOrbit.CircularOrbit;
 import exceptions.ExceptionGroup;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,7 +29,7 @@ public interface CircularOrbitFactory {
    *
    * @param loadFrom path of the profile.
    * @param ignoreException whether to return the value if some warning happens when loading from
-   file, and whether check RI after loading.
+     file, and whether check RI after loading.
    * @see CircularOrbit#loadFromFile(String)
    */
   @Nullable
@@ -100,7 +102,7 @@ public interface CircularOrbitFactory {
 
   public static final Function<String, List<String>> scannerStrategy = path -> {
     List<String> list;
-    try (Scanner scan = new Scanner(new FileInputStream(path))) {
+    try (Scanner scan = new Scanner(new BufferedInputStream(new FileInputStream(path)))) {
       list = new ArrayList<>();
       while (scan.hasNext()) {
         list.add(scan.nextLine());
@@ -124,15 +126,22 @@ public interface CircularOrbitFactory {
   };
 
   public static final BiPredicate<String, List<String>> channelStrategy_write = (path, list) -> {
-    var crlf = ByteBuffer.wrap("\n".getBytes());
-    crlf.put("\n".getBytes());
+    ByteBuffer buf = ByteBuffer.allocate(4096);
+    final var crlf = "\n".getBytes();
     try (FileChannel fc = new FileOutputStream(path).getChannel()) {
       for (String s : list) {
         var by = s.getBytes();
-        ByteBuffer buf = ByteBuffer.wrap(by);
-        buf.put(by).flip();
+        if (by.length + buf.position() < buf.limit()) {
+          buf.put(by).put(crlf);
+        } else {
+          buf.flip();
+          fc.write(buf);
+          buf.clear();
+        }
+      }
+      if (buf.position() > 0) {
+        buf.flip();
         fc.write(buf);
-        fc.write(crlf.flip());
       }
     } catch (IOException e) {
       return false;
@@ -141,7 +150,8 @@ public interface CircularOrbitFactory {
   };
 
   public static final BiPredicate<String, List<String>> streamStrategy = (path, list) -> {
-    try (FileOutputStream fso = new FileOutputStream(path)) {
+    //decorate FileOutputStream as Buffered, it will be extremely fast...
+    try (BufferedOutputStream fso = new BufferedOutputStream(new FileOutputStream(path))) {
       for (String s : list) {
         fso.write(s.getBytes());
         fso.write("\n".getBytes());

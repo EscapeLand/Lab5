@@ -379,7 +379,7 @@ final class Electron extends PhysicalObject {
 
   @Override
   public Electron clone() {
-    Electron e = new Electron(R_init.getRect()[0]);
+    Electron e = new Electron(radiusInit.getRect()[0]);
     e.setR(getR());
     e.state = state.isGround() ? new Ground() : new Excited();
     return e;

@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -34,6 +35,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import track.Track;
 
@@ -57,13 +59,15 @@ public final class SocialNetworkCircle extends ConcreteCircularOrbit<CentralUser
     }
 
     Consumer<List<String>> load = ls -> {
+      var pattern = Pattern.compile("([a-zA-Z]+)\\s*::=\\s*<(.*)>");
       for (String buffer : ls) {
+        //TODO: try-block in for-loop. naive.
         try {
-          Matcher m = Pattern.compile("([a-zA-Z]+)\\s*::=\\s*<(.*)>").matcher(buffer);
+          Matcher m = pattern.matcher(buffer);
           if (!m.find() || m.groupCount() != 2) {
             throw new IllegalArgumentException("regex: cannot match (" + buffer + "), continued. ");
           }
-          String[] list = (m.group(2).split("\\s*,\\s*"));
+          String[] list = StringUtils.split(m.group(2), ",");
           if (list.length != 3) {
             throw new IllegalArgumentException("regex: (" + buffer + ")not 3 args. continued. ");
           }
@@ -73,9 +77,9 @@ public final class SocialNetworkCircle extends ConcreteCircularOrbit<CentralUser
               break;
             case "Friend":
               synchronized (userMap) {
-                var u = new User(list[0], Integer.valueOf(list[1]),
-                    Enum.valueOf(Gender.class, list[2]));
-                super.addObject(u);
+                var u = new User(list[0], Integer.valueOf(list[1].trim()),
+                    Enum.valueOf(Gender.class, list[2].trim()));
+                var r = super.addObject(u);
                 userMap.put(list[0], u);
               }
               break;
@@ -103,8 +107,8 @@ public final class SocialNetworkCircle extends ConcreteCircularOrbit<CentralUser
           continue;
         }
 
-        PhysicalObject q1 = userMap.get(list[0]);
-        PhysicalObject q2 = userMap.get(list[1]);
+        PhysicalObject q1 = userMap.get(list[0].trim());
+        PhysicalObject q2 = userMap.get(list[1].trim());
 
         if (q1 == null || q2 == null) {
           exs.join(new LogicErrorException("warning: " + (q1 == null ? list[0] + " " : "")
@@ -113,7 +117,7 @@ public final class SocialNetworkCircle extends ConcreteCircularOrbit<CentralUser
         }
 
         try {
-          var split = list[2].split(".");
+          var split = StringUtils.split(list[2], ".");
           if (split.length == 2 && split[1].length() > 3) {
             split[1] = split[1].substring(0, 3);
             var tmp = list[2];
@@ -131,7 +135,8 @@ public final class SocialNetworkCircle extends ConcreteCircularOrbit<CentralUser
     };
     try {
       Tools.assignThread(txt, load, 50000);
-      txt.clear();
+      //noinspection UnusedAssignment
+      txt = null;
       System.gc();
 
       var center = center();
@@ -176,15 +181,17 @@ public final class SocialNetworkCircle extends ConcreteCircularOrbit<CentralUser
     Graph<PhysicalObject> graph = getGraph();
     var relations = new ArrayList<>(graph.edges().entrySet());
     try {
-      Tools.assignThread(relations, rs -> rs.forEach(orr -> {
-        PhysicalObject a = (PhysicalObject) orr.getKey()[0];
-        PhysicalObject b = (PhysicalObject) orr.getKey()[1];
-        var str = String.format("SocialTie ::= <%s, %s, %s>", a.getName(), b.getName(),
-            _3.format(orr.getValue()));
-        synchronized (list) {
-          list.add(str);
+      Tools.assignThread(relations, rs -> {
+        for (Entry<Object[], Float> orr : rs) {
+          PhysicalObject a = (PhysicalObject) orr.getKey()[0];
+          PhysicalObject b = (PhysicalObject) orr.getKey()[1];
+          var str = String.format("SocialTie ::= <%s, %s, %s>", a.getName(), b.getName(),
+              _3.format(orr.getValue()));
+          synchronized (list) {
+            list.add(str);
+          }
         }
-      }), 5000);
+      }, 5000);
     } catch (InterruptedException e) {
       GeneralLogger.severe(e);
       System.exit(1);
@@ -194,10 +201,12 @@ public final class SocialNetworkCircle extends ConcreteCircularOrbit<CentralUser
     var objects = new ArrayList<>(this.objects);
     try {
       Tools.assignThread(objects,
-          os -> os.forEach(u -> {
-            var str = String.format("Friend ::= %s", u.toString());
-            list.add(str);
-          }), 6000);
+          os -> {
+            for (User u : os) {
+              var str = String.format("Friend ::= %s", u.toString());
+              list.add(str);
+            }
+          }, 6000);
     } catch (InterruptedException e) {
       GeneralLogger.severe(e);
       System.exit(1);
@@ -399,31 +408,32 @@ public final class SocialNetworkCircle extends ConcreteCircularOrbit<CentralUser
   private void updateR() {
     var relationship = getGraph();
     List<PhysicalObject> cur = new ArrayList<>(1);
+    List<PhysicalObject> rtSet = new ArrayList<>();
     cur.add(center());
     var vertex = relationship.vertices();
     vertex.remove(center());
     int n = vertex.size() + 1;
 
     for (int k = 0; !vertex.isEmpty() && vertex.size() < n; k++) {
-      List<PhysicalObject> rtSet = new ArrayList<>();
       final int tmp = k;
-      Consumer<List<PhysicalObject>> assign = rs -> rs.forEach(p -> {
-        if (vertex.remove(p)) {
-          synchronized (this) {
-            super.moveObject((User) p, new double[]{tmp + 1});
+      Consumer<List<PhysicalObject>> assign = rs -> {
+        for (PhysicalObject p : rs) {
+          if (vertex.remove(p)) {
+            synchronized (this) {
+              super.moveObject((User) p, new double[]{tmp + 1});
+            }
           }
         }
+      };
+      Consumer<List<PhysicalObject>> add = rs -> rs.forEach(p -> {
+        Set<PhysicalObject> tmpSet;
+        tmpSet = relationship.targets(p).keySet();
+        synchronized (rtSet) {
+          rtSet.addAll(tmpSet);
+        }
       });
-      Consumer<List<PhysicalObject>> add = rs -> rs
-          .forEach(p -> {
-            Set<PhysicalObject> tmpSet;
-            tmpSet = relationship.targets(p).keySet();
-            synchronized (rtSet) {
-              rtSet.addAll(tmpSet);
-            }
-          });
       try {
-        Tools.assignThread(cur, add, 3000);
+        Tools.assignThread(cur, add, 10000);
         n = vertex.size();
         Tools.assignThread(rtSet, assign, 5000);
       } catch (InterruptedException e) {
@@ -431,19 +441,21 @@ public final class SocialNetworkCircle extends ConcreteCircularOrbit<CentralUser
         System.exit(1);
       }
       cur = rtSet;
+      rtSet.clear();
     }
 
     vertex.forEach(v -> v.setR(new double[]{-1}));
     clearEmptyTrack();
+    System.gc();
 
     var edges = relationship.edges();
-    edges.forEach((d, f) -> {
+    for (Object[] d : edges.keySet()) {
       PhysicalObject a = (PhysicalObject) d[0];
       PhysicalObject b = (PhysicalObject) d[1];
       if (a.getR().getRect()[0] > b.getR().getRect()[0]) {
         relationship.set(a, b, 0);
       }
-    });
+    }
 
     //checkRep();
   }
@@ -494,17 +506,20 @@ final class User extends PhysicalObject {
   private final Gender gender;
   private final int age;
   public static String[] hint = new String[]{"Radius", "Name", "Age", "Gender"};
+  private final int hashCache;
 
   User(Double r, String name, int age, Gender gender) {
     super(name, new double[]{r}, 360 * Math.random());
     this.gender = gender;
     this.age = age;
+    this.hashCache = Objects.hash(super.hashCode(), getGender(), getAge());
   }
 
   User(String name, int age, Gender gender) {
     super(name, new double[]{-1});
     this.gender = gender;
     this.age = age;
+    this.hashCache = Objects.hash(super.hashCode(), getGender(), getAge());
   }
 
   private Gender getGender() {
@@ -533,12 +548,12 @@ final class User extends PhysicalObject {
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), getGender(), getAge());
+    return hashCache;
   }
 
   @Override
   public User clone() {
-    var tmp = new User(R_init.getRect()[0], getName(), getAge(), getGender());
+    var tmp = new User(radiusInit.getRect()[0], getName(), getAge(), getGender());
     tmp.setR(getR());
     return tmp;
   }

@@ -24,6 +24,9 @@ public class PhysicalObjectFactory {
       var ctor = cls.getDeclaredConstructors()[0];
       ctor.setAccessible(true);
       assert ctor.getParameterTypes().length == args.length;
+      for (int i = 0; i < args.length; i++) {
+        args[i] = args[i].trim();
+      }
       switch (cls.getSimpleName()) {
         case "Planet":
           var ty = ctor.getParameterTypes();

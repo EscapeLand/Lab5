@@ -1,6 +1,7 @@
 package track;
 
 import circularOrbit.PhysicalObject;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Objects;
@@ -13,16 +14,20 @@ import java.util.Objects;
 public class Track<E extends PhysicalObject> {
 
   /*
-    RI: R[0] >= R[1]; R.length == 2;
-    AF: AF(R[0], R[1]) = the orbit, maybe a perfect circle or a ellipse.
+    RI: radius[0] >= radius[1]; radius.length == 2;
+    AF: AF(radius[0], radius[1]) = the orbit, maybe a perfect circle or a ellipse.
    */
-  private final double[] R;
+  private final double[] radius;
+  private static ArrayList<double[]> pool;
+  private static boolean disablePool = false;
+
   /**
    * the default comparator of two tracks.
    *
    * @see Arrays#compare(double[], double[])
    */
-  public static final Comparator<Track> defaultComparator = (a, b) -> Arrays.compare(a.R, b.R);
+  public static final Comparator<Track> defaultComparator = (a, b) -> Arrays
+      .compare(a.radius, b.radius);
 
   private static double[] unboxingCast_double(Double[] d) {
     double[] arr = new double[d.length];
@@ -36,20 +41,42 @@ public class Track<E extends PhysicalObject> {
    * Track with several args.
    *
    * @param track the radius. no larger than 2 elements.
+   * @throws IllegalArgumentException if length of track != 1  or 2.
    */
-  public Track(double[] track) {
+  public Track(double... track) {
+    double[] cache = null;
+    if (!disablePool) {
+      if (pool == null) {
+        initialPool();
+      }
+      int i = ((int) track[0]);
+      cache = pool.get(i == -1 ? 5 : i);
+    }
     switch (track.length) {
       case 1:
-        this.R = new double[]{track[0], track[0]};
+        this.radius = cache == null ? new double[]{track[0], track[0]} : cache;
         break;
       case 2:
+        if (cache != null) {
+          this.radius = cache;
+          break;
+        }
         var max = Math.max(track[0], track[1]);
         var min = Math.min(track[0], track[1]);
-        this.R = new double[]{max, min};
+        this.radius = new double[]{max, min};
         break;
       default:
-        throw new IllegalArgumentException("length of R: " + track.length);
+        throw new IllegalArgumentException("length of radius: " + track.length);
     }
+  }
+
+  private static void initialPool() {
+    pool = new ArrayList<>(6);
+    pool.add(new double[]{0, 0});
+    for (int i = 1; i < 5; i++) {
+      pool.add(new double[]{i, i});
+    }
+    pool.add(new double[]{-1, -1});
   }
 
   /**
@@ -57,8 +84,12 @@ public class Track<E extends PhysicalObject> {
    *
    * @param track the radius. no larger than 2 elements.
    */
-  public Track(Double[] track) {
+  public Track(Double... track) {
     this(unboxingCast_double(track));
+  }
+
+  public static void setDisablePool(boolean disablePool) {
+    Track.disablePool = disablePool;
   }
 
   @Override
@@ -70,20 +101,20 @@ public class Track<E extends PhysicalObject> {
       return false;
     }
     Track<?> track = (Track<?>) o;
-    return Arrays.equals(track.R, R);
+    return Arrays.equals(track.radius, radius);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(R[0], R[1]);
+    return Objects.hash(radius[0], radius[1]);
   }
 
   @Override
   public String toString() {
-    if (R[0] == R[1]) {
-      return String.valueOf(R[1]);
+    if (radius[0] == radius[1]) {
+      return String.valueOf(radius[1]);
     } else {
-      return Arrays.toString(R);
+      return Arrays.toString(radius);
     }
   }
 
@@ -94,9 +125,9 @@ public class Track<E extends PhysicalObject> {
    * @param a one track
    * @param b another track
    * @return a negative integer, zero, or a positive integer as the first argument is less than,
-   * equal to, or greater than the second.
+     equal to, or greater than the second.
    * @see Track#defaultComparator
-   * @see Comparator<Track>#compare(Track, Track)
+   * @see Comparator#compare(Object, Object)
    */
   public static int compare(Track a, Track b) {
     return defaultComparator.compare(a, b);
@@ -108,7 +139,7 @@ public class Track<E extends PhysicalObject> {
    * @return radius of the track, length == 2. ({long half shaft, short half shaft})
    */
   public double[] getRect() {
-    return R.clone();
+    return radius.clone();
   }
 
   /**
@@ -117,6 +148,6 @@ public class Track<E extends PhysicalObject> {
    * @return radius of the track, length == 2. ({long half shaft, short half shaft})
    */
   public Double[] getRect_alt() {
-    return new Double[]{R[0], R[1]};
+    return new Double[]{radius[0], radius[1]};
   }
 }

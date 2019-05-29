@@ -36,8 +36,10 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import track.Track;
 
 public final class StellarSystem extends ConcreteCircularOrbit<FixedStar, Planet> {
 
@@ -48,6 +50,7 @@ public final class StellarSystem extends ConcreteCircularOrbit<FixedStar, Planet
   private static Method run;
 
   static {
+    Track.setDisablePool(true);
     try {
       run = Class.forName("APIs.CircularOrbitHelper").getDeclaredMethod(
           "run", StellarSystem.class);
@@ -95,28 +98,27 @@ public final class StellarSystem extends ConcreteCircularOrbit<FixedStar, Planet
     final Set<String> repeat = new HashSet<>();
 
     Consumer<List<String>> load = (ls) -> {
+      var pattern = Pattern.compile("([a-zA-Z]+)\\s*::=\\s*<(.*)>");
       for (String buffer : ls) {
         try {
-          Matcher m = Pattern.compile("([a-zA-Z]+)\\s*::=\\s*<(.*)>").matcher(buffer);
+          Matcher m = pattern.matcher(buffer);
           if (!m.find() || m.groupCount() != 2) {
             throw new IllegalArgumentException(
                 "regex: (" + buffer + "), didn't match, continued. ");
           }
+
+          String[] list = StringUtils.split(m.group(2), ",");
           switch (m.group(1)) {
             case "Stellar": {
-              String[] list = m.group(2).split("\\s*,\\s*");
               if (list.length != 3) {
                 throw new IllegalArgumentException("regex: Stellar: not 3 args. continued. ");
               }
-
               FixedStar f = new FixedStar(list[0], Double.valueOf(list[1]),
                   Double.valueOf(list[2]));
               changeCentre(f);
               break;
             }
             case "Planet": {
-              String[] list = m.group(2).split("\\s*,\\s*");
-
               if (list.length != 8) {
                 throw new IllegalArgumentException("regex: Planet: not 8 args. continued. ");
               }
@@ -135,7 +137,7 @@ public final class StellarSystem extends ConcreteCircularOrbit<FixedStar, Planet
             }
             default:
               throw new IllegalArgumentException(
-                  "regex: unexpected label: " + m.group(1) + " continued. ");
+                  "regex: unexpected label: " + m.group(1) + ". continued. ");
           }
         } catch (IllegalArgumentException | LogicErrorException e) {
           exs.join(e);
@@ -445,13 +447,13 @@ class Planet extends PhysicalObject {
   @Override
   public Planet clone() {
     var tmp = new Planet(getName(), getForm(), getColor(), radius, getR().getRect(), v, getDir(),
-        pos_init);
+        posInit);
     tmp.setPos(getPos());
     return tmp;
   }
 
   void nextTime(double time) {
-    setPos(pos_init + v * time);
+    setPos(posInit + v * time);
   }
 
   Form getForm() {

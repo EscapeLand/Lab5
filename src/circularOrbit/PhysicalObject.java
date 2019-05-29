@@ -2,6 +2,7 @@ package circularOrbit;
 
 import java.util.Comparator;
 import java.util.Objects;
+import java.util.concurrent.ThreadLocalRandom;
 import track.Track;
 
 /**
@@ -12,11 +13,12 @@ public abstract class PhysicalObject {
   /*
     RI: none.
     AF: AF(name, R, pos) = an object at now time .
-      AF(name, R_init, pos_init) = an object when its initialed.
+      AF(name, radiusInit, posInit) = an object when its initialed.
    */
   private final String name;
-  protected final Track R_init;
-  protected final double pos_init;
+  protected final Track radiusInit;
+  protected final double posInit;
+  private final int hashCache;
   private Track R;
   private double pos;
   /**
@@ -32,8 +34,9 @@ public abstract class PhysicalObject {
    */
   protected PhysicalObject(String name, double[] r, double pos) {
     this.name = name;
-    this.R_init = this.R = new Track(r);
-    this.pos_init = this.pos = pos;
+    this.radiusInit = this.R = new Track(r);
+    this.posInit = this.pos = pos;
+    this.hashCache = Objects.hash(name, radiusInit, posInit);
   }
 
   /**
@@ -43,8 +46,8 @@ public abstract class PhysicalObject {
    * @param r the radius of its track.
    */
   protected PhysicalObject(String name, double[] r) {
-    this(name, r, num < 9 ? 40 * num + 40 * Math.random()
-        : 360 * Math.random());
+    this(name, r, num < 9 ? 40 * num + ThreadLocalRandom.current().nextDouble(40)
+        : ThreadLocalRandom.current().nextDouble(360));
     num++;
   }
 
@@ -56,7 +59,7 @@ public abstract class PhysicalObject {
    * set R.
    * @param r radius of the new track.
    */
-  public void setR(double[] r) {
+  public final void setR(double... r) {
     setR(new Track(r));
   }
 
@@ -64,7 +67,7 @@ public abstract class PhysicalObject {
    * set R.
    * @param r radius of the new track.
    */
-  public void setR(Double[] r) {
+  public final void setR(Double... r) {
     setR(new Track(r));
   }
 
@@ -80,7 +83,7 @@ public abstract class PhysicalObject {
     return pos;
   }
 
-  public void setPos(double pos) {
+  public final void setPos(double pos) {
     this.pos = pos;
   }
 
@@ -103,14 +106,14 @@ public abstract class PhysicalObject {
       return false;
     }
     PhysicalObject that = (PhysicalObject) o;
-    return Double.compare(that.pos_init, pos_init) == 0
+    return Double.compare(that.posInit, posInit) == 0
         && getName().equals(that.getName())
-        && R_init.equals(that.R_init);
+        && radiusInit.equals(that.radiusInit);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(getName(), R_init, pos_init);
+    return this.hashCache;
   }
 
   @Override
@@ -124,9 +127,9 @@ public abstract class PhysicalObject {
    */
   public static Comparator<PhysicalObject> getDefaultComparator() {
     return (o1, o2) -> {
-      var r = Track.compare(o1.R_init, o2.R_init);
+      var r = Track.compare(o1.radiusInit, o2.radiusInit);
       if (r == 0) {
-        return Double.compare(o1.pos_init, o2.pos_init);
+        return Double.compare(o1.posInit, o2.posInit);
       } else {
         return r;
       }
@@ -140,7 +143,7 @@ public abstract class PhysicalObject {
    * @param <T> a PhysicalObject
    * @return hint strings with array.
    */
-  public static <T extends PhysicalObject> String[] hintForUser(Class<T> tyClass) {
+  static <T extends PhysicalObject> String[] hintForUser(Class<T> tyClass) {
     try {
       var f = tyClass.getDeclaredField("hint");
       f.setAccessible(true);
