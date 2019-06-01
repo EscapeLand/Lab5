@@ -10,6 +10,7 @@ import static exceptions.GeneralLogger.info;
 import static factory.PhysicalObjectFactory.produce;
 
 import APIs.CircularOrbitHelper;
+import applications.StellarSystem;
 import exceptions.GeneralLogger;
 import graph.Graph;
 import java.awt.Color;
@@ -36,8 +37,7 @@ import org.jetbrains.annotations.Nullable;
 import track.Track;
 
 /**
- * Mutable. an implement of CircularOrbit.
- * thread-NOT-safe.
+ * Mutable. an implement of CircularOrbit. thread-NOT-safe.
  *
  * @param <L> the type of the center.
  * @param <E> type of the objects on object
@@ -92,16 +92,23 @@ public abstract class ConcreteCircularOrbit<L extends PhysicalObject, E extends 
 
   @Override
   public boolean removeTrack(double[] r) {
+    //NOTE: O(n)
     assert r.length > 0;
     Track<E> tmp = new Track<>(r);
     var b = tracks.remove(tmp);
     var it = objects.iterator();
+    E e;
     while (it.hasNext()) {
-      var e = it.next();
-      if (e.getR().equals(tmp)) {
+      e = it.next();
+      var cmp = Track.compare(e.getR(), tmp);
+      if (cmp == 0) {
         assert b;
         relationship.remove(e);
         it.remove();
+      } else if (cmp > 0) {
+        if (this instanceof StellarSystem) {
+          break;
+        }
       }
     }
     info(Arrays.toString(r));
@@ -174,6 +181,7 @@ public abstract class ConcreteCircularOrbit<L extends PhysicalObject, E extends 
   @Override
   @Nullable
   public PhysicalObject query(@NotNull String objName) {
+    //NOTE: O(n)
     info(objName);
     final String name = objName.trim();
     if (centre != null && centre.getName().equals(name)) {
@@ -363,7 +371,9 @@ public abstract class ConcreteCircularOrbit<L extends PhysicalObject, E extends 
       if (t == 0) {
         ret.add(e);
       } else if (t > 0) {
-        break;
+        if (this instanceof StellarSystem) {
+          break;
+        }
       }
     }
     return ret;
@@ -388,6 +398,9 @@ public abstract class ConcreteCircularOrbit<L extends PhysicalObject, E extends 
     return objects.size();
   }
 
+  /**
+   * NOTE: O(mn).
+   */
   protected void clearEmptyTrack() {
     tracks.removeIf(t -> find_if(objects, (E e) -> e.getR().equals(t)) == null);
   }

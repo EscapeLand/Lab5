@@ -296,7 +296,8 @@ public final class StellarSystem extends ConcreteCircularOrbit<FixedStar, Planet
 
   @Override
   public boolean removeObject(@NotNull Planet obj) {
-    return super.removeTrack(obj.getR().getRect());
+    tracks.remove(obj.getR());            //fuck encapsulation
+    return super.removeObject(obj);
   }
 
   /**

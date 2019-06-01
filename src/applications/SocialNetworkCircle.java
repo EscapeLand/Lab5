@@ -80,6 +80,7 @@ public final class SocialNetworkCircle extends ConcreteCircularOrbit<CentralUser
                 var u = new User(list[0], Integer.valueOf(list[1].trim()),
                     Enum.valueOf(Gender.class, list[2].trim()));
                 var r = super.addObject(u);
+                assert r;
                 userMap.put(list[0], u);
               }
               break;
@@ -100,6 +101,9 @@ public final class SocialNetworkCircle extends ConcreteCircularOrbit<CentralUser
     };
     Consumer<List<String[]>> addRelation = ls -> {
       for (String[] list : ls) {
+        for (int i = 0; i < list.length; i++) {
+          list[i] = list[i].trim();
+        }
         if (list[0].equals(list[1])) {
           exs.join(
               new LogicErrorException("relationship: " + list[0]
@@ -107,8 +111,8 @@ public final class SocialNetworkCircle extends ConcreteCircularOrbit<CentralUser
           continue;
         }
 
-        PhysicalObject q1 = userMap.get(list[0].trim());
-        PhysicalObject q2 = userMap.get(list[1].trim());
+        PhysicalObject q1 = userMap.get(list[0]);
+        PhysicalObject q2 = userMap.get(list[1]);
 
         if (q1 == null || q2 == null) {
           exs.join(new LogicErrorException("warning: " + (q1 == null ? list[0] + " " : "")
@@ -408,40 +412,46 @@ public final class SocialNetworkCircle extends ConcreteCircularOrbit<CentralUser
   private void updateR() {
     var relationship = getGraph();
     List<PhysicalObject> cur = new ArrayList<>(1);
-    List<PhysicalObject> rtSet = new ArrayList<>();
     cur.add(center());
     var vertex = relationship.vertices();
     vertex.remove(center());
     int n = vertex.size() + 1;
 
     for (int k = 0; !vertex.isEmpty() && vertex.size() < n; k++) {
-      final int tmp = k;
+      final var tmp = new double[]{k + 1};
+      Set<PhysicalObject> rtSet = new HashSet<>();
       Consumer<List<PhysicalObject>> assign = rs -> {
         for (PhysicalObject p : rs) {
-          if (vertex.remove(p)) {
-            synchronized (this) {
-              super.moveObject((User) p, new double[]{tmp + 1});
+          synchronized (vertex) {
+            if (vertex.remove(p)) {
+              super.moveObject((User) p, tmp);
             }
           }
         }
       };
-      Consumer<List<PhysicalObject>> add = rs -> rs.forEach(p -> {
-        Set<PhysicalObject> tmpSet;
-        tmpSet = relationship.targets(p).keySet();
-        synchronized (rtSet) {
-          rtSet.addAll(tmpSet);
+      Consumer<List<PhysicalObject>> add = rs -> {
+        for (PhysicalObject p : rs) {
+          Set<PhysicalObject> tmpSet;
+          tmpSet = relationship.targets(p).keySet();
+          for (PhysicalObject o : tmpSet) {
+            if (vertex.contains(o)) {
+              synchronized (rtSet) {
+                rtSet.add(o);
+              }
+            }
+          }
         }
-      });
+      };
       try {
         Tools.assignThread(cur, add, 10000);
         n = vertex.size();
-        Tools.assignThread(rtSet, assign, 5000);
+        cur.clear();
+        cur = new ArrayList<>(rtSet);
+        Tools.assignThread(cur, assign, 5000);
       } catch (InterruptedException e) {
         GeneralLogger.severe(e);
         System.exit(1);
       }
-      cur = rtSet;
-      rtSet.clear();
     }
 
     vertex.forEach(v -> v.setR(new double[]{-1}));

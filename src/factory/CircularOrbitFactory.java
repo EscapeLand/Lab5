@@ -29,7 +29,7 @@ public interface CircularOrbitFactory {
    *
    * @param loadFrom path of the profile.
    * @param ignoreException whether to return the value if some warning happens when loading from
-     file, and whether check RI after loading.
+   * file, and whether check RI after loading.
    * @see CircularOrbit#loadFromFile(String)
    */
   @Nullable
@@ -45,16 +45,22 @@ public interface CircularOrbitFactory {
 
 
   /**
-   * read a file, as a list of String separated by \n. no blank line is included.
+   * read a file, as a list of String separated by \n(\r\n). no blank line is included.
    *
    * @param path file path
-   * @return list of String, separated by \n.
+   * @return list of String, separated by \n(\r\n).
    */
   @Nullable List<String> read(String path);
 
-  public void setReadingMethod(@NotNull Function<String, List<String>> readingMethod);
-
+  /**
+   * write a file, from a list of string.
+   * @param path file path to write.
+   * @param content list of string.
+   * @return true if success.
+   */
   boolean write(String path, List<String> content);
+
+  public void setReadingMethod(@NotNull Function<String, List<String>> readingMethod);
 
   void setWritingMethod(BiPredicate<String, List<String>> writingMethod);
 
@@ -82,11 +88,14 @@ public interface CircularOrbitFactory {
         buf.flip();
         for (int i = 0; i < buf.limit(); i++) {
           byte x = buf.get();
-          if (x == '\n') {
-            list.add(new String(line.array(), 0, line.position()));
-            line.clear();
-          } else {
-            line.put(x);
+          switch (x) {
+            case '\r':
+            case '\n':
+              list.add(new String(line.array(), 0, line.position()));
+              line.clear();
+              break;
+            default:
+              line.put(x);
           }
         }
         buf.clear();
