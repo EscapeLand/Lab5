@@ -30,4 +30,5 @@ hs_err_pid*
 .css
 .img
 out/
+*.log
 *.properties
